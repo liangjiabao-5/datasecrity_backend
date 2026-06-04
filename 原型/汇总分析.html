@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汇总分析 - ENST</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #60a5fa;
+            --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --border-light: #f1f5f9;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-sidebar: #0f172a;
+            --bg-sidebar-hover: #1e293b;
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --radius-full: 9999px;
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+            --transition-slow: 0.35s ease;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            color: var(--text-primary);
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 230px;
+            background: linear-gradient(180deg, var(--bg-sidebar) 0%, #1e293b 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            z-index: 10;
+            border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+            overflow: hidden;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+        }
+
+        .logo {
+            padding: 28px 22px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .logo-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-subtitle {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 8px 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 11px 22px;
+            margin: 4px 12px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            color: #cbd5e1;
+            font-size: 13px;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-sidebar-hover);
+            color: #fff;
+        }
+
+        .nav-item.active {
+            background: var(--primary-gradient);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .nav-item i {
+            width: 18px;
+            height: 18px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .nav-item span {
+            flex: 1;
+            text-align: left;
+        }
+
+        .nav-item.active i {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .top-header {
+            height: 60px;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .menu-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .menu-btn:hover {
+            background: var(--border-color);
+        }
+
+        .header-tabs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-tab {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .header-tab:hover {
+            background: var(--border-color);
+        }
+
+        .header-tab.active {
+            background: var(--primary-gradient);
+            color: #fff;
+        }
+
+        .header-tab i {
+            margin-right: 6px;
+        }
+
+        .header-tab-close {
+            margin-left: 8px;
+            opacity: 0.7;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+            color: var(--text-secondary);
+        }
+
+        .header-btn:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-left: 12px;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .user-name {
+            font-size: 13px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .step-nav {
+            display: flex;
+            align-items: center;
+            margin-bottom: 28px;
+            padding: 28px 32px;
+            background: var(--bg-primary);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-nav::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            margin-right: 0;
+            position: relative;
+            flex: 1;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .step:last-child {
+            margin-right: 0;
+        }
+
+        .step-num {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 600;
+            margin-right: 14px;
+            transition: all var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+            position: relative;
+        }
+
+        .step.active .step-num {
+            background: var(--primary-gradient);
+            color: #fff;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .step-text {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+            transition: all var(--transition-fast);
+        }
+
+        .step.active .step-text {
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .step-arrow {
+            color: #cbd5e0;
+            margin: 0 16px;
+            font-size: 16px;
+            transition: all var(--transition-fast);
+        }
+
+        .step.active .step-arrow {
+            color: var(--primary-light);
+        }
+
+        .step.last .step-arrow {
+            display: none;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            width: 90%;
+            max-width: 900px;
+            min-width: 600px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: var(--danger-light);
+            color: var(--danger);
+        }
+
+        .modal-body {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            background: var(--bg-primary);
+        }
+
+        .modal-section {
+            margin-bottom: 24px;
+        }
+
+        .modal-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-section label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }
+
+        .risk-types-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .risk-type-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .risk-type-item:hover {
+            background: var(--border-color);
+        }
+
+        .risk-type-item input[type="checkbox"] {
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .risk-type-item span {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            transition: all var(--transition-fast);
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+
+        .modal-textarea {
+            min-height: 180px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 20px 24px;
+            border-top: 1px solid var(--border-color);
+            gap: 16px;
+            background: var(--bg-secondary);
+        }
+
+        .btn-cancel {
+            padding: 10px 24px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            background: var(--bg-primary);
+            transition: all var(--transition-fast);
+        }
+
+        .btn-cancel:hover {
+            background: var(--bg-secondary);
+            border-color: var(--text-muted);
+        }
+
+        .btn-confirm {
+            padding: 10px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            color: #fff;
+            cursor: pointer;
+            background: var(--primary-gradient);
+            transition: all var(--transition-fast);
+        }
+
+        .btn-confirm:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .tabs-container {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .tabs-header {
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 20px;
+        }
+
+        .tab-item {
+            padding: 16px 0;
+            font-size: 14px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            border-bottom: 2px solid transparent;
+            position: relative;
+        }
+
+        .tab-item:hover {
+            color: var(--text-secondary);
+        }
+
+        .tab-item.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tabs-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(59, 130, 246, 0.45);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
+        }
+
+        .btn-secondary {
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
+            color: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
+            color: var(--primary-dark);
+        }
+
+        .tabs-content {
+            padding: 20px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table thead {
+            background: var(--bg-tertiary);
+        }
+
+        .data-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: top;
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .action-btn {
+            color: var(--primary-color);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .action-btn:hover {
+            text-decoration: underline;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .content-area, .nav-menu {
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-color) var(--bg-tertiary);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <img src="logo.png" alt="ENST Logo">
+                </div>
+                <div class="logo-content">
+                    <div class="logo-title">ENST</div>
+                    <div class="logo-subtitle">数据安全风险评估工具</div>
+                </div>
+            </div>
+            
+            <div class="nav-menu">
+                <div class="nav-item" onclick="navigateTo('项目管理页面.html')">
+                    <i class="fas fa-folder-open"></i>
+                    <span>项目管理</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('评估方案-评估团队.html')">
+                    <i class="fas fa-users"></i>
+                    <span>评估方案</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('信息调研.html')">
+                    <i class="fas fa-search"></i>
+                    <span>信息调研</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('现场测评.html')">
+                    <i class="fas fa-check-square"></i>
+                    <span>现场测评</span>
+                </div>
+                <div class="nav-item active" onclick="navigateTo('汇总分析.html')">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>汇总分析</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('报告管理.html')">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>报告管理</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('知识库管理页面.html')">
+                    <i class="fas fa-book-open"></i>
+                    <span>知识库管理</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>系统设置</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="top-header">
+                <div class="header-left">
+                    <button class="menu-btn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="header-tabs">
+                        <div class="header-tab active">
+                            <i class="fas fa-folder-open"></i>
+                            <span>项目管理页面</span>
+                            <i class="fas fa-times header-tab-close"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="header-btn" title="翻译">
+                        <i class="fas fa-language"></i>
+                    </button>
+                    <button class="header-btn" title="搜索">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <button class="header-btn" title="全屏">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button class="header-btn" title="帮助">
+                        <i class="fas fa-question-circle"></i>
+                    </button>
+                    <div class="user-info">
+                        <div class="user-avatar">T</div>
+                        <span class="user-name">test039</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-nav">
+                <div class="step" onclick="navigateTo('项目管理-基本信息.html')">
+                    <span class="step-num">1</span>
+                    <span class="step-text">基本信息</span>
+                    <span class="step-arrow">></span>
+                </div>
+                <div class="step" onclick="navigateTo('评估方案-评估团队.html')">
+                    <span class="step-num">2</span>
+                    <span class="step-text">评估方案</span>
+                    <span class="step-arrow">></span>
+                </div>
+                <div class="step" onclick="navigateTo('信息调研.html')">
+                    <span class="step-num">3</span>
+                    <span class="step-text">信息调研</span>
+                    <span class="step-arrow">></span>
+                </div>
+                <div class="step" onclick="navigateTo('现场测评.html')">
+                    <span class="step-num">4</span>
+                    <span class="step-text">现场测评</span>
+                    <span class="step-arrow">></span>
+                </div>
+                <div class="step active" onclick="navigateTo('汇总分析.html')">
+                    <span class="step-num">5</span>
+                    <span class="step-text">汇总分析</span>
+                    <span class="step-arrow">></span>
+                </div>
+                <div class="step last" onclick="navigateTo('报告管理.html')">
+                    <span class="step-num">6</span>
+                    <span class="step-text">报告管理</span>
+                </div>
+            </div>
+
+            <div class="content-area">
+                <div class="tabs-container">
+                    <div class="tabs-header">
+                        <div class="tab-item active" onclick="switchTab('risk-source-tab')">数据安全风险源清单</div>
+                        <div class="tab-item" onclick="switchTab('risk-list-tab')">数据安全风险清单</div>
+                        <div class="tab-item" onclick="switchTab('risk-disposal-tab')">数据安全风险处置建议</div>
+                    </div>
+
+                    <div class="tabs-toolbar">
+                        <button class="btn btn-primary" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i>
+                            刷新统计数据
+                        </button>
+                        <button class="btn btn-primary" onclick="window.location.href='报告管理.html'">
+                            <i class="fas fa-arrow-right"></i>
+                            下一步
+                        </button>
+                    </div>
+
+                    <div class="tabs-content" id="risk-source-tab">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>序号</th>
+                                        <th>风险类型</th>
+                                        <th>风险描述</th>
+                                        <th>风险源描述</th>
+                                        <th>涉及的数据及类型、级别</th>
+                                        <th>涉及的数据处理活动</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>数据泄露风险,数据滥用风险,数据处理缺乏正当性,数据破坏风险,数据伪造风险,违法违规保存数据风险,违法违规公开数据,超范围处理数据,App违法违规收集使用个人信息,数据不可控风险,其他风险,数据处理抵赖风险,未有效保障个人信息主体权利,违法违规出境数据,违法违规提供数据,违法违规出售数据,数据篡改风险,违法违规购买数据</td>
+                                        <td>由于数据窃取、爬取、脱库、撞库等攻击行为导致数据泄露的风险</td>
+                                        <td>企业未制定明确的数据安全总体策略和方针，缺乏完善的数据分类分级管理制度和操作规范</td>
+                                        <td>222</td>
+                                        <td>22222</td>
+                                        <td><span class="action-btn" onclick="openEditModal(0)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>数据丢失风险,数据滥用风险</td>
+                                        <td>数据存储介质故障或人为误操作导致数据丢失的风险</td>
+                                        <td>数据备份策略不完善，备份频率不足，缺乏异地容灾机制</td>
+                                        <td>用户敏感数据（个人信息）</td>
+                                        <td>数据存储、数据备份</td>
+                                        <td><span class="action-btn" onclick="openEditModal(1)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>数据篡改风险,数据伪造风险</td>
+                                        <td>未经授权的数据修改或伪造风险</td>
+                                        <td>访问控制措施不足，缺乏数据完整性校验机制</td>
+                                        <td>业务数据（机密级）</td>
+                                        <td>数据使用和加工、数据存储</td>
+                                        <td><span class="action-btn" onclick="openEditModal(2)">修改</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tabs-content" id="risk-list-tab" style="display: none;">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>序号</th>
+                                        <th>风险类型</th>
+                                        <th>风险描述</th>
+                                        <th>风险危害程度</th>
+                                        <th>风险发生的可能性</th>
+                                        <th>风险源描述</th>
+                                        <th>风险等级</th>
+                                        <th>涉及的数据及类型、级别</th>
+                                        <th>涉及的数据处理活动</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>数据泄露风险</td>
+                                        <td>由于数据窃取、爬取、...</td>
+                                        <td>较高</td>
+                                        <td>中</td>
+                                        <td>未制定数据安全总体策...</td>
+                                        <td>低安全风险</td>
+                                        <td>111</td>
+                                        <td>111</td>
+                                        <td><span class="action-btn" onclick="openListEditModal(0)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>数据滥用风险</td>
+                                        <td>由于缺乏授权访问控制...</td>
+                                        <td>较高</td>
+                                        <td>中</td>
+                                        <td>未制定数据安全总体策...</td>
+                                        <td>低安全风险</td>
+                                        <td>111</td>
+                                        <td>111</td>
+                                        <td><span class="action-btn" onclick="openListEditModal(1)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>数据处理缺乏正当性</td>
+                                        <td>违反正当性原则，数据...</td>
+                                        <td>较高</td>
+                                        <td>中</td>
+                                        <td>未制定数据安全总体策...</td>
+                                        <td>低安全风险</td>
+                                        <td>111</td>
+                                        <td>111</td>
+                                        <td><span class="action-btn" onclick="openListEditModal(2)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td>数据泄露风险</td>
+                                        <td>由于数据窃取、爬取、...</td>
+                                        <td>较高</td>
+                                        <td>中</td>
+                                        <td>未制定数据安全管理工...</td>
+                                        <td>低安全风险</td>
+                                        <td>111</td>
+                                        <td>111</td>
+                                        <td><span class="action-btn" onclick="openListEditModal(3)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>5</td>
+                                        <td>数据泄露风险</td>
+                                        <td>由于数据窃取、爬取、...</td>
+                                        <td>较高</td>
+                                        <td>中</td>
+                                        <td>未制定数据安全管理工...</td>
+                                        <td>低安全风险</td>
+                                        <td>111</td>
+                                        <td>111</td>
+                                        <td><span class="action-btn" onclick="openListEditModal(4)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>6</td>
+                                        <td>数据丢失风险</td>
+                                        <td>由于数据过载、软硬件...</td>
+                                        <td>较高</td>
+                                        <td>中</td>
+                                        <td>未制定数据安全管理工...</td>
+                                        <td>低安全风险</td>
+                                        <td>111</td>
+                                        <td>111</td>
+                                        <td><span class="action-btn" onclick="openListEditModal(5)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>7</td>
+                                        <td>数据滥用风险</td>
+                                        <td>由于缺乏授权访问控制...</td>
+                                        <td>较高</td>
+                                        <td>中</td>
+                                        <td>未制定详细的数据安全...</td>
+                                        <td>低安全风险</td>
+                                        <td>111</td>
+                                        <td>111</td>
+                                        <td><span class="action-btn" onclick="openListEditModal(6)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>8</td>
+                                        <td>数据滥用风险</td>
+                                        <td>由于数据窃取、爬取、...</td>
+                                        <td>较高</td>
+                                        <td>中</td>
+                                        <td>未制定安全制度体系中...</td>
+                                        <td>低安全风险</td>
+                                        <td>111</td>
+                                        <td>111</td>
+                                        <td><span class="action-btn" onclick="openListEditModal(7)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>9</td>
+                                        <td>数据泄露风险</td>
+                                        <td>由于数据窃取、爬取、...</td>
+                                        <td>较高</td>
+                                        <td>中</td>
+                                        <td>数据安全制度体系中，...</td>
+                                        <td>低安全风险</td>
+                                        <td>111</td>
+                                        <td>111</td>
+                                        <td><span class="action-btn" onclick="openListEditModal(8)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>10</td>
+                                        <td>数据滥用风险</td>
+                                        <td>由于缺乏授权访问控制...</td>
+                                        <td>较高</td>
+                                        <td>中</td>
+                                        <td>数据安全制度体系中，...</td>
+                                        <td>低安全风险</td>
+                                        <td>111</td>
+                                        <td>111</td>
+                                        <td><span class="action-btn" onclick="openListEditModal(9)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>11</td>
+                                        <td>数据处理缺乏正当性</td>
+                                        <td>违反正当性原则，数据...</td>
+                                        <td>较高</td>
+                                        <td>中</td>
+                                        <td>数据安全制度体系中，...</td>
+                                        <td>低安全风险</td>
+                                        <td>111</td>
+                                        <td>111</td>
+                                        <td><span class="action-btn" onclick="openListEditModal(10)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>12</td>
+                                        <td>数据泄露风险</td>
+                                        <td>由于数据窃取、爬取、...</td>
+                                        <td>较高</td>
+                                        <td>中</td>
+                                        <td>关键岗位的数据安全管...</td>
+                                        <td>低安全风险</td>
+                                        <td>111</td>
+                                        <td>111</td>
+                                        <td><span class="action-btn" onclick="openListEditModal(11)">修改</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tabs-content" id="risk-disposal-tab" style="display: none;">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>序号</th>
+                                        <th>风险类型</th>
+                                        <th>风险描述</th>
+                                        <th>风险源描述</th>
+                                        <th>风险等级</th>
+                                        <th>整改建议</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>数据泄露风险</td>
+                                        <td>由于数据窃取、爬取、脱库、撞...</td>
+                                        <td>未制定数据安全总体策略、方针...</td>
+                                        <td>低安全风险</td>
+                                        <td>立即制定并发布数据安全总体策...</td>
+                                        <td><span class="action-btn" onclick="openDisposalEditModal(0)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td>数据滥用风险</td>
+                                        <td>由于缺乏授权访问控制、权限管...</td>
+                                        <td>未制定数据安全总体策略、方针...</td>
+                                        <td>低安全风险</td>
+                                        <td>立即制定并发布数据安全总体策...</td>
+                                        <td><span class="action-btn" onclick="openDisposalEditModal(1)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td>数据处理缺乏正当性</td>
+                                        <td>违反正当性原则，数据处理活动...</td>
+                                        <td>未制定数据安全总体策略、方针...</td>
+                                        <td>低安全风险</td>
+                                        <td>立即制定并发布数据安全总体策...</td>
+                                        <td><span class="action-btn" onclick="openDisposalEditModal(2)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td>数据泄露风险</td>
+                                        <td>由于数据窃取、爬取、脱库、撞...</td>
+                                        <td>未制定数据安全管理工作规划...</td>
+                                        <td>低安全风险</td>
+                                        <td>立即制定并实施数据安全管理工...</td>
+                                        <td><span class="action-btn" onclick="openDisposalEditModal(3)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>5</td>
+                                        <td>数据泄露风险</td>
+                                        <td>由于数据窃取、爬取、脱库、撞...</td>
+                                        <td>未制定数据安全管理工作规划...</td>
+                                        <td>低安全风险</td>
+                                        <td>立即制定并实施数据安全管理工...</td>
+                                        <td><span class="action-btn" onclick="openDisposalEditModal(4)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>6</td>
+                                        <td>数据丢失风险</td>
+                                        <td>由于数据过载、软硬件故障、备...</td>
+                                        <td>未制定数据安全管理工作规划...</td>
+                                        <td>低安全风险</td>
+                                        <td>立即制定并实施数据安全管理工...</td>
+                                        <td><span class="action-btn" onclick="openDisposalEditModal(5)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>7</td>
+                                        <td>数据滥用风险</td>
+                                        <td>由于缺乏授权访问控制、权限管...</td>
+                                        <td>未制定详细的数据安全管理工作...</td>
+                                        <td>低安全风险</td>
+                                        <td>立即制定并实施数据安全管理工...</td>
+                                        <td><span class="action-btn" onclick="openDisposalEditModal(6)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>8</td>
+                                        <td>数据滥用风险</td>
+                                        <td>由于缺乏授权访问控制、脱库、撞...</td>
+                                        <td>未制定详细的数据分类、数据分...</td>
+                                        <td>低安全风险</td>
+                                        <td>立即制定并实施数据分类分级和数...</td>
+                                        <td><span class="action-btn" onclick="openDisposalEditModal(7)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>9</td>
+                                        <td>数据泄露风险</td>
+                                        <td>由于数据窃取、爬取、脱库、撞...</td>
+                                        <td>数据安全制度体系中，数据分类...</td>
+                                        <td>低安全风险</td>
+                                        <td>建立完善的数据分类分级和数据...</td>
+                                        <td><span class="action-btn" onclick="openDisposalEditModal(8)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>10</td>
+                                        <td>数据滥用风险</td>
+                                        <td>由于缺乏授权访问控制、权限管...</td>
+                                        <td>数据安全制度体系中，数据分类...</td>
+                                        <td>低安全风险</td>
+                                        <td>建立完善的数据分类分级和数据...</td>
+                                        <td><span class="action-btn" onclick="openDisposalEditModal(9)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>11</td>
+                                        <td>数据处理缺乏正当性</td>
+                                        <td>违反正当性原则，数据处理活动...</td>
+                                        <td>数据安全制度体系中，数据分类...</td>
+                                        <td>低安全风险</td>
+                                        <td>建立完善的数据分类分级和数据...</td>
+                                        <td><span class="action-btn" onclick="openDisposalEditModal(10)">修改</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>12</td>
+                                        <td>数据泄露风险</td>
+                                        <td>由于数据窃取、爬取、脱库、撞...</td>
+                                        <td>关键岗位的数据安全管理操作...</td>
+                                        <td>低安全风险</td>
+                                        <td>建立完善的关键岗位的数据...</td>
+                                        <td><span class="action-btn" onclick="openDisposalEditModal(11)">修改</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        function switchTab(tabId) {
+            const tabs = document.querySelectorAll('.tab-item');
+            const contents = document.querySelectorAll('.tabs-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.style.display = 'none');
+            
+            event.target.classList.add('active');
+            document.getElementById(tabId).style.display = 'block';
+        }
+
+        function refreshData() {
+            alert('正在刷新统计数据...');
+        }
+
+        const riskTypes = [
+            '数据泄露风险', '数据篡改风险', '数据破坏风险', '数据丢失风险', '数据滥用风险', '数据伪造风险',
+            '违法违规获取数据', '违法违规出售数据', '违法违规保存数据', '违法违规利用数据', '违法违规提供数据', '违法违规公开数据',
+            '违法违规购买数据', '违法违规出境数据', '超范围处理数据', '数据处理缺乏正当性', '未有效保障个人信息主体权利',
+            'App违法违规收集使用个人信息', '数据处理缺乏公平公正', '数据处理抵赖风险', '数据不可控风险', '数据推断风险', '其他风险'
+        ];
+
+        const riskData = [
+            {
+                riskTypes: ['数据泄露风险', '数据滥用风险', '数据处理缺乏正当性', '数据破坏风险', '数据伪造风险', '违法违规保存数据', '违法违规公开数据', '超范围处理数据', 'App违法违规收集使用个人信息', '数据不可控风险', '其他风险', '数据处理抵赖风险', '未有效保障个人信息主体权利', '违法违规出境数据', '违法违规提供数据', '违法违规出售数据', '数据篡改风险', '违法违规购买数据'],
+                problemDesc: '企业未制定明确的数据安全总体策略、方针、目标和原则，导致数据安全管理缺乏系统性和指导性。',
+                dataInfo: '222',
+                dataActivity: '22222'
+            },
+            {
+                riskTypes: ['数据丢失风险', '数据滥用风险'],
+                problemDesc: '数据存储介质故障或人为误操作导致数据丢失的风险',
+                dataInfo: '用户敏感数据（个人信息）',
+                dataActivity: '数据存储、数据备份'
+            },
+            {
+                riskTypes: ['数据篡改风险', '数据伪造风险'],
+                problemDesc: '未经授权的数据修改或伪造风险',
+                dataInfo: '业务数据（机密级）',
+                dataActivity: '数据使用和加工、数据存储'
+            }
+        ];
+
+        let currentEditIndex = -1;
+
+        function openEditModal(index) {
+            currentEditIndex = index;
+            const data = riskData[index];
+            
+            const checkboxes = document.querySelectorAll('.risk-type-checkbox');
+            checkboxes.forEach((checkbox, i) => {
+                checkbox.checked = data.riskTypes.includes(riskTypes[i]);
+            });
+            
+            document.getElementById('problem-desc').value = data.problemDesc;
+            document.getElementById('data-info').value = data.dataInfo;
+            document.getElementById('data-activity').value = data.dataActivity;
+            
+            document.getElementById('edit-modal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('edit-modal').classList.remove('show');
+            currentEditIndex = -1;
+        }
+
+        function confirmEdit() {
+            if (currentEditIndex === -1) return;
+            
+            const checkboxes = document.querySelectorAll('.risk-type-checkbox');
+            const selectedTypes = [];
+            checkboxes.forEach((checkbox, i) => {
+                if (checkbox.checked) {
+                    selectedTypes.push(riskTypes[i]);
+                }
+            });
+            
+            riskData[currentEditIndex] = {
+                riskTypes: selectedTypes,
+                problemDesc: document.getElementById('problem-desc').value,
+                dataInfo: document.getElementById('data-info').value,
+                dataActivity: document.getElementById('data-activity').value
+            };
+            
+            const rows = document.querySelectorAll('#risk-source-tab tbody tr');
+            const row = rows[currentEditIndex];
+            row.cells[1].textContent = selectedTypes.join(',');
+            row.cells[3].textContent = document.getElementById('problem-desc').value;
+            row.cells[4].textContent = document.getElementById('data-info').value;
+            row.cells[5].textContent = document.getElementById('data-activity').value;
+            
+            closeModal();
+            alert('修改成功！');
+        }
+
+        const riskListData = [
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全总体策略、方针、目标和原则，缺乏对数据安全的全面指导和规范。', dataInfo: '111', dataActivity: '111' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全总体策略、方针、目标和原则，缺乏对数据安全的全面指导和规范。', dataInfo: '111', dataActivity: '111' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全总体策略、方针、目标和原则，缺乏对数据安全的全面指导和规范。', dataInfo: '111', dataActivity: '111' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全管理工作相关制度和流程。', dataInfo: '111', dataActivity: '111' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全管理工作相关制度和流程。', dataInfo: '111', dataActivity: '111' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全管理工作相关制度和流程。', dataInfo: '111', dataActivity: '111' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定详细的数据安全管理制度和操作规范。', dataInfo: '111', dataActivity: '111' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定安全制度体系中的相关数据安全管理制度。', dataInfo: '111', dataActivity: '111' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '数据安全制度体系中，相关数据安全管理制度不完善。', dataInfo: '111', dataActivity: '111' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '数据安全制度体系中，相关数据安全管理制度不完善。', dataInfo: '111', dataActivity: '111' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '数据安全制度体系中，相关数据安全管理制度不完善。', dataInfo: '111', dataActivity: '111' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '关键岗位的数据安全管理职责不明确。', dataInfo: '111', dataActivity: '111' }
+        ];
+
+        let currentListEditIndex = -1;
+
+        function openListEditModal(index) {
+            currentListEditIndex = index;
+            const data = riskListData[index];
+            
+            document.getElementById('hazard-level').value = data.hazardLevel;
+            document.getElementById('probability').value = data.probability;
+            document.getElementById('source-desc').value = data.sourceDesc;
+            document.getElementById('list-data-info').value = data.dataInfo;
+            document.getElementById('list-data-activity').value = data.dataActivity;
+            
+            document.getElementById('list-edit-modal').classList.add('show');
+        }
+
+        function closeListModal() {
+            document.getElementById('list-edit-modal').classList.remove('show');
+            currentListEditIndex = -1;
+        }
+
+        function confirmListEdit() {
+            if (currentListEditIndex === -1) return;
+            
+            riskListData[currentListEditIndex] = {
+                hazardLevel: document.getElementById('hazard-level').value,
+                probability: document.getElementById('probability').value,
+                sourceDesc: document.getElementById('source-desc').value,
+                dataInfo: document.getElementById('list-data-info').value,
+                dataActivity: document.getElementById('list-data-activity').value
+            };
+            
+            const rows = document.querySelectorAll('#risk-list-tab tbody tr');
+            const row = rows[currentListEditIndex];
+            row.cells[3].textContent = document.getElementById('hazard-level').value;
+            row.cells[4].textContent = document.getElementById('probability').value;
+            row.cells[5].textContent = document.getElementById('source-desc').value.substring(0, 15) + '...';
+            row.cells[7].textContent = document.getElementById('list-data-info').value;
+            row.cells[8].textContent = document.getElementById('list-data-activity').value;
+            
+            closeListModal();
+            alert('修改成功！');
+        }
+
+        const disposalData = [
+            { suggestion: '立即制定并发布数据安全总体策略、方针、目标和原则，明确数据安全管理的指导思想和工作方向。' },
+            { suggestion: '立即制定并发布数据安全总体策略、方针、目标和原则，明确数据安全管理的指导思想和工作方向。' },
+            { suggestion: '立即制定并发布数据安全总体策略、方针、目标和原则，明确数据安全管理的指导思想和工作方向。' },
+            { suggestion: '立即制定并实施数据安全管理工作规划，明确工作目标、任务和时间节点。' },
+            { suggestion: '立即制定并实施数据安全管理工作规划，明确工作目标、任务和时间节点。' },
+            { suggestion: '立即制定并实施数据安全管理工作规划，明确工作目标、任务和时间节点。' },
+            { suggestion: '立即制定并实施数据安全管理工作规划，细化工作流程和责任分工。' },
+            { suggestion: '立即制定并实施数据分类分级和数据安全评估工作，建立数据资产台账。' },
+            { suggestion: '建立完善的数据分类分级和数据安全评估机制，定期开展评估工作。' },
+            { suggestion: '建立完善的数据分类分级和数据安全评估机制，定期开展评估工作。' },
+            { suggestion: '建立完善的数据分类分级和数据安全评估机制，定期开展评估工作。' },
+            { suggestion: '建立完善的关键岗位的数据安全管理制度和操作规范。' }
+        ];
+
+        let currentDisposalIndex = -1;
+
+        function openDisposalEditModal(index) {
+            currentDisposalIndex = index;
+            const data = disposalData[index];
+            document.getElementById('disposal-suggestion').value = data.suggestion;
+            document.getElementById('disposal-edit-modal').classList.add('show');
+        }
+
+        function closeDisposalModal() {
+            document.getElementById('disposal-edit-modal').classList.remove('show');
+            currentDisposalIndex = -1;
+        }
+
+        function confirmDisposalEdit() {
+            if (currentDisposalIndex === -1) return;
+            
+            disposalData[currentDisposalIndex] = {
+                suggestion: document.getElementById('disposal-suggestion').value
+            };
+            
+            const rows = document.querySelectorAll('#risk-disposal-tab tbody tr');
+            const row = rows[currentDisposalIndex];
+            row.cells[5].textContent = document.getElementById('disposal-suggestion').value.substring(0, 15) + '...';
+            
+            closeDisposalModal();
+            alert('修改成功！');
+        }
+
+    </script>
+
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">修改风险源信息</span>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <label>风险类型:</label>
+                    <div class="risk-types-grid">
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="数据泄露风险"><span>数据泄露风险</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="数据篡改风险"><span>数据篡改风险</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="数据破坏风险"><span>数据破坏风险</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="数据丢失风险"><span>数据丢失风险</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="数据滥用风险"><span>数据滥用风险</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="数据伪造风险"><span>数据伪造风险</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="违法违规获取数据"><span>违法违规获取数据</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="违法违规出售数据"><span>违法违规出售数据</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="违法违规保存数据"><span>违法违规保存数据</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="违法违规利用数据"><span>违法违规利用数据</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="违法违规提供数据"><span>违法违规提供数据</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="违法违规公开数据"><span>违法违规公开数据</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="违法违规购买数据"><span>违法违规购买数据</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="违法违规出境数据"><span>违法违规出境数据</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="超范围处理数据"><span>超范围处理数据</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="数据处理缺乏正当性"><span>数据处理缺乏正当性</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="未有效保障个人信息主体权利"><span>未有效保障个人信息主体权利</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="App违法违规收集使用个人信息"><span>App违法违规收集使用个人信息</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="数据处理缺乏公平公正"><span>数据处理缺乏公平公正</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="数据处理抵赖风险"><span>数据处理抵赖风险</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="数据不可控风险"><span>数据不可控风险</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="数据推断风险"><span>数据推断风险</span></label>
+                        <label class="risk-type-item"><input type="checkbox" class="risk-type-checkbox" value="其他风险"><span>其他风险</span></label>
+                    </div>
+                </div>
+                
+                <div class="modal-section">
+                    <label>问题描述:</label>
+                    <textarea class="modal-input modal-textarea" id="problem-desc"></textarea>
+                </div>
+                
+                <div class="modal-section">
+                    <label>涉及的数据及类型、级别:</label>
+                    <textarea class="modal-input modal-textarea" id="data-info"></textarea>
+                </div>
+                
+                <div class="modal-section">
+                    <label>涉及的数据处理活动:</label>
+                    <textarea class="modal-input modal-textarea" id="data-activity"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">取消</button>
+                <button class="btn-confirm" onclick="confirmEdit()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="list-edit-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">修改风险清单信息</span>
+                <button class="modal-close" onclick="closeListModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <label>风险危害程度:</label>
+                    <select class="modal-input" id="hazard-level">
+                        <option value="较高">较高</option>
+                        <option value="高">高</option>
+                        <option value="中">中</option>
+                        <option value="低">低</option>
+                    </select>
+                </div>
+                
+                <div class="modal-section">
+                    <label>风险发生可能性:</label>
+                    <select class="modal-input" id="probability">
+                        <option value="中">中</option>
+                        <option value="高">高</option>
+                        <option value="低">低</option>
+                    </select>
+                </div>
+                
+                <div class="modal-section">
+                    <label>风险源描述:</label>
+                    <textarea class="modal-input modal-textarea" id="source-desc"></textarea>
+                </div>
+                
+                <div class="modal-section">
+                    <label>涉及的数据及类型、级别:</label>
+                    <textarea class="modal-input modal-textarea" id="list-data-info"></textarea>
+                </div>
+                
+                <div class="modal-section">
+                    <label>涉及的数据处理活动:</label>
+                    <textarea class="modal-input modal-textarea" id="list-data-activity"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeListModal()">取消</button>
+                <button class="btn-confirm" onclick="confirmListEdit()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="disposal-edit-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">修改整改建议</span>
+                <button class="modal-close" onclick="closeDisposalModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <label>整改建议:</label>
+                    <textarea class="modal-input modal-textarea" id="disposal-suggestion"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeDisposalModal()">取消</button>
+                <button class="btn-confirm" onclick="confirmDisposalEdit()">确定</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

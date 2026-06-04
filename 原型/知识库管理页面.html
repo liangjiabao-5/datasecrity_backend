@@ -1,0 +1,3088 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识库管理 - ENST</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #60a5fa;
+            --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --border-light: #f1f5f9;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-sidebar: #0f172a;
+            --bg-sidebar-hover: #1e293b;
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --radius-full: 9999px;
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+            --transition-slow: 0.35s ease;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            color: var(--text-primary);
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 230px;
+            background: linear-gradient(180deg, var(--bg-sidebar) 0%, #1e293b 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            z-index: 10;
+            border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+            overflow: hidden;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+        }
+
+        .logo {
+            padding: 28px 22px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .logo-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-subtitle {
+            font-size: 11px;
+            color: #94a3b8;
+            letter-spacing: 0.3px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-light), #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1px;
+        }
+
+        .logo-title {
+            font-size: 12px;
+            color: #64748b;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        .logo-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 8px 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 11px 22px;
+            margin: 4px 12px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            color: #cbd5e1;
+            font-size: 13px;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-sidebar-hover);
+            color: #fff;
+        }
+
+        .nav-item.active {
+            background: var(--primary-gradient);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .nav-item i {
+            width: 18px;
+            height: 18px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .nav-item span {
+            flex: 1;
+            text-align: left;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg-gradient);
+        }
+
+        .top-header {
+            height: 64px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            z-index: 5;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .menu-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .menu-btn:hover {
+            background: var(--border-color);
+        }
+
+        .header-tabs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-tab {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .header-tab:hover {
+            background: var(--border-color);
+        }
+
+        .header-tab.active {
+            background: var(--primary-gradient);
+            color: #fff;
+        }
+
+        .header-tab i {
+            margin-right: 6px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+            color: var(--text-secondary);
+        }
+
+        .header-btn:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            margin-left: 20px;
+            padding-left: 20px;
+            border-left: 1px solid var(--border-light);
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            margin-right: 12px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .user-detail {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .content-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px;
+            background: var(--bg-gradient);
+        }
+
+        .content-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .content-body::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .content-body::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .content-body::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .page-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all var(--transition-normal);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(59, 130, 246, 0.45);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
+            color: var(--primary-dark);
+        }
+
+        .btn-sm {
+            padding: 6px 16px;
+            font-size: 13px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
+            color: var(--primary-dark);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .search-input {
+            flex: 1;
+            max-width: 400px;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            transition: all var(--transition-fast);
+            background: var(--bg-primary);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .card {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding-bottom: 0;
+            border-bottom: none;
+            position: relative;
+        }
+
+        .tab-item {
+            padding: 10px 24px;
+            border-radius: 0;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            color: #4E5969;
+            position: relative;
+            background: transparent;
+        }
+
+        .tab-item:hover {
+            color: #165DFF;
+            background: transparent;
+        }
+
+        .tab-item.active {
+            color: #165DFF;
+            font-weight: 500;
+            background: transparent;
+        }
+
+        .tab-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -16px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #165DFF;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .sub-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .sub-tab {
+            padding: 8px 20px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: #3b82f6;
+            background: #eff6ff;
+            border: 1px solid #3b82f6;
+            transition: all var(--transition-fast);
+        }
+
+        .sub-tab:hover {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .sub-tab.active {
+            background: #3b82f6;
+            color: #fff;
+            border-color: #3b82f6;
+        }
+
+        .sub-tab-content {
+            display: none;
+        }
+
+        .sub-tab-content.active {
+            display: block;
+        }
+
+        .risk-model-content {
+            display: none;
+            min-height: 500px;
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .risk-model-content.active {
+            display: block;
+        }
+
+        .step-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 30px;
+            width: 100%;
+        }
+
+        .step-card {
+            background: #e8f4fd;
+            padding: 24px 25px 28px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            width: calc(25% - 15px);
+            min-width: 200px;
+            text-align: center;
+            font-family: "Microsoft YaHei", "Inter", sans-serif;
+            position: relative;
+            border-left: 4px solid #2d8cf0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .step-number {
+            position: absolute;
+            left: -13px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 26px;
+            height: 26px;
+            background: #2d8cf0;
+            border-radius: 50%;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(45, 140, 240, 0.3);
+        }
+
+        .step-icon {
+            font-size: 20px;
+            color: #2d8cf0;
+            margin-top: 0;
+        }
+
+        .step-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .step-connector {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            width: 30px;
+            flex-shrink: 0;
+        }
+
+        .step-line {
+            width: 12px;
+            height: 2px;
+            background: #2d8cf0;
+        }
+
+        .step-arrow {
+            width: 0;
+            height: 0;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            border-left: 8px solid #2d8cf0;
+        }
+
+        /* 评分规则配置弹窗样式 */
+        .model-config-modal {
+            width: 1067px !important;
+            max-width: 1067px !important;
+            max-height: 1200px !important;
+            height: auto !important;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .model-config-body {
+            max-height: 1100px;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .config-section {
+            margin-top: 24px;
+        }
+
+        .config-section:first-child {
+            margin-top: 0;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin: 0 0 8px 0;
+        }
+
+        .section-desc {
+            font-size: 12px;
+            color: #666;
+            margin: 0 0 12px 0;
+        }
+
+        .score-config-group {
+            display: flex;
+            justify-content: space-around;
+            gap: 16px;
+        }
+
+        .score-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .score-label {
+            font-size: 13px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .score-input {
+            width: 80px;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .score-input.disabled {
+            background: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .formula-display {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .formula-text {
+            font-size: 14px;
+            color: #333;
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .formula-note {
+            font-size: 12px;
+            color: #666;
+            margin: 8px 0 0 0;
+        }
+
+        .risk-mapping-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .risk-mapping-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .risk-label {
+            width: 70px;
+            font-size: 13px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .risk-range {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .risk-input {
+            width: 70px;
+            padding: 6px 10px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .risk-input.error {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .range-separator {
+            color: #666;
+        }
+
+        .range-unit {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .range-note {
+            font-size: 11px;
+            color: #999;
+            margin-left: 8px;
+        }
+
+        .validation-error {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: #fef2f2;
+            border-radius: 4px;
+        }
+
+        /* 评分模型详情弹窗样式 */
+        .model-detail-modal {
+            width: 700px;
+            max-height: 600px;
+            overflow: hidden;
+        }
+
+        .model-detail-body {
+            max-height: 480px;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .detail-section {
+            margin-bottom: 24px;
+        }
+
+        .detail-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin: 0 0 12px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .detail-value {
+            font-size: 13px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .detail-score-grid {
+            display: flex;
+            justify-content: space-around;
+            gap: 12px;
+        }
+
+        .detail-score-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-radius: 8px;
+            min-width: 100px;
+        }
+
+        .score-badge {
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 12px;
+            border-radius: 4px;
+        }
+
+        .score-badge.meet {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .score-badge.partial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .score-badge.not-meet {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .score-badge.not-applicable {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .score-value {
+            font-size: 13px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .detail-risk-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .detail-risk-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .risk-badge {
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 12px;
+            border-radius: 4px;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .risk-badge.high {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .risk-badge.medium {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .risk-badge.low {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .risk-range-text {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .detail-formula {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+
+        .detail-formula p {
+            font-size: 13px;
+            color: #333;
+            margin: 0;
+            word-break: break-word;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .data-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table tbody tr {
+            transition: background var(--transition-fast);
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge.default {
+            background: rgba(148, 163, 184, 0.1);
+            color: var(--text-muted);
+        }
+
+        .badge.success {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success-color);
+        }
+
+        .badge.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            flex-direction: row;
+            transition: all var(--transition-fast);
+        }
+
+        .action-btn.view {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-color);
+        }
+
+        .action-btn.view:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        .action-btn.edit {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .action-btn.edit:hover {
+            background: rgba(245, 158, 11, 0.15);
+        }
+
+        .action-btn.delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        .action-btn.delete:hover {
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .action-btn.export {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success-color);
+        }
+
+        .action-btn.export:hover {
+            background: rgba(34, 197, 94, 0.15);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-normal);
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            border-radius: var(--radius-xl);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: var(--shadow-xl);
+            transform: scale(0.95) translateY(20px);
+            transition: all var(--transition-normal);
+        }
+        
+        #view-matrix-modal .modal-content {
+            width: 1180px !important;
+            max-width: 92vw !important;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all var(--transition-fast);
+        }
+
+        .modal-close:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            transition: all var(--transition-fast);
+            background: var(--bg-primary);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            transition: all var(--transition-fast);
+            background: var(--bg-primary);
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            transition: all var(--transition-fast);
+            background: var(--bg-primary);
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .form-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .form-checkbox-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .form-checkbox-item.checked {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--primary-color);
+        }
+
+        .form-checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .form-checkbox-item label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-light);
+            background: var(--bg-secondary);
+        }
+
+        .model-params {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+        }
+
+        .param-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .param-item:last-child {
+            border-bottom: none;
+        }
+
+        .param-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .param-value {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .param-input {
+            width: 150px;
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .scenario-card {
+            padding: 16px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .scenario-card:hover {
+            border-color: var(--primary-color);
+            background: rgba(59, 130, 246, 0.04);
+        }
+
+        .scenario-card.selected {
+            border-color: var(--primary-color);
+            background: rgba(59, 130, 246, 0.06);
+        }
+
+        .scenario-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .scenario-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <img src="logo.png" alt="ENST">
+                </div>
+                <div class="logo-content">
+                    <div class="logo-title">ENST</div>
+                    <div class="logo-subtitle">数据安全风险评估工具</div>
+                </div>
+            </div>
+            <nav class="nav-menu">
+                <div class="nav-item" onclick="navigateTo('项目管理页面.html')">
+                    <i class="fas fa-folder-open"></i>
+                    <span>项目管理</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('评估方案-评估团队.html')">
+                    <i class="fas fa-users"></i>
+                    <span>评估方案</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('信息调研.html')">
+                    <i class="fas fa-search"></i>
+                    <span>信息调研</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('现场测评.html')">
+                    <i class="fas fa-check-square"></i>
+                    <span>现场测评</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('汇总分析.html')">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>汇总分析</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('报告管理.html')">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>报告管理</span>
+                </div>
+                <div class="nav-item active" onclick="navigateTo('知识库管理页面.html')">
+                    <i class="fas fa-book-open"></i>
+                    <span>知识库管理</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>系统设置</span>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="menu-btn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="header-tabs">
+                        <div class="header-tab active">
+                            <i class="fas fa-book-open"></i>
+                            知识库管理
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="header-btn" title="设置">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button class="header-btn" title="全屏">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button class="header-btn" title="帮助">
+                        <i class="fas fa-question-circle"></i>
+                    </button>
+                    <div class="user-info">
+                        <div class="user-avatar">T</div>
+                        <div class="user-detail">
+                            <div class="user-name">test039</div>
+                            <div class="user-role">管理员</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-body">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">知识库管理</h1>
+                        <p class="page-desc">管理评估知识库，包括模板、规则及基础数据</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="tabs-container">
+                        <div class="tab-item active" onclick="showTab('assessment-template')">
+                            <i class="fas fa-file-template" style="margin-right: 8px;"></i>
+                            评估项模板设置
+                        </div>
+
+                        <div class="tab-item" onclick="showTab('risk-suggestion')">
+                            风险处置建议管理
+                        </div>
+                        <div class="tab-item" onclick="showTab('scoring-model')">
+                            评分模型管理
+                        </div>
+                        <div class="tab-item" onclick="showTab('risk-analysis')">
+                            风险危害程度分析模型管理
+                        </div>
+                        <div class="tab-item" onclick="showTab('risk-matrix')">
+                            <i class="fas fa-grid" style="margin-right: 8px;"></i>
+                            风险评价矩阵管理
+                        </div>
+                    </div>
+
+                    <div id="assessment-template" class="tab-content active">
+                        <div class="search-bar">
+                            <input type="text" class="search-input" placeholder="搜索评估项模板..." onkeyup="filterTable('assessment-table')">
+                            <button class="btn btn-primary" onclick="showAddModal('assessment')">
+                                <i class="fas fa-plus"></i>
+                                添加模板
+                            </button>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table" id="assessment-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px;">序号</th>
+                                        <th>模板名称</th>
+                                        <th>模板类型</th>
+                                        <th>评估项数量</th>
+                                        <th>创建时间</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="row-number"></td>
+                                        <td><strong>国标GB/T 37973模板</strong></td>
+                                        <td><span class="badge success">国标模板</span></td>
+                                        <td>128</td>
+                                        <td>2024-01-01</td>
+                                        <td><span class="badge success">启用</span></td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="action-btn edit" onclick="showEditModal('assessment')">
+                                                    <i class="fas fa-edit"></i>编辑
+                                                </button>
+                                                <button class="action-btn delete" onclick="deleteItem(this, 'assessment-table')">
+                                                    <i class="fas fa-trash"></i>删除
+                                                </button>
+                                                <button class="action-btn export" onclick="exportItem()">
+                                                    <i class="fas fa-download"></i>导出
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="row-number"></td>
+                                        <td><strong>行标电信行业模板</strong></td>
+                                        <td><span class="badge warning">行标模板</span></td>
+                                        <td>96</td>
+                                        <td>2024-01-15</td>
+                                        <td><span class="badge success">启用</span></td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="action-btn edit" onclick="showEditModal('assessment')">
+                                                    <i class="fas fa-edit"></i>编辑
+                                                </button>
+                                                <button class="action-btn delete" onclick="deleteItem(this, 'assessment-table')">
+                                                    <i class="fas fa-trash"></i>删除
+                                                </button>
+                                                <button class="action-btn export" onclick="exportItem()">
+                                                    <i class="fas fa-download"></i>导出
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="row-number"></td>
+                                        <td><strong>金融行业评估模板</strong></td>
+                                        <td><span class="badge warning">行业模板</span></td>
+                                        <td>156</td>
+                                        <td>2024-02-01</td>
+                                        <td><span class="badge success">启用</span></td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="action-btn edit" onclick="showEditModal('assessment')">
+                                                    <i class="fas fa-edit"></i>编辑
+                                                </button>
+                                                <button class="action-btn delete" onclick="deleteItem(this, 'assessment-table')">
+                                                    <i class="fas fa-trash"></i>删除
+                                                </button>
+                                                <button class="action-btn export" onclick="exportItem()">
+                                                    <i class="fas fa-download"></i>导出
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="system-template" class="tab-content">
+                        <div class="sub-tabs">
+                            <div class="sub-tab active" onclick="showSubTab('system')">系统模板</div>
+                            <div class="sub-tab" onclick="showSubTab('processing')">数据处理活动</div>
+                            <div class="sub-tab" onclick="showSubTab('protection')">安全防护措施</div>
+                        </div>
+
+                        <div id="system" class="sub-tab-content active">
+                            <div class="search-bar">
+                                <input type="text" class="search-input" placeholder="搜索系统模板..." onkeyup="filterTable('system-table')">
+                                <button class="btn btn-primary" onclick="showAddModal('system')">
+                                    <i class="fas fa-plus"></i>
+                                    添加模板
+                                </button>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table" id="system-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 60px;">序号</th>
+                                            <th>系统名称</th>
+                                            <th>系统类型</th>
+                                            <th>所属行业</th>
+                                            <th>创建时间</th>
+                                            <th>状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="row-number"></td>
+                                            <td><strong>OA办公系统</strong></td>
+                                            <td><span class="badge default">通用系统</span></td>
+                                            <td>通用</td>
+                                            <td>2024-01-01</td>
+                                            <td><span class="badge success">启用</span></td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="action-btn edit" onclick="showEditModal('system')">
+                                                        <i class="fas fa-edit"></i>编辑
+                                                    </button>
+                                                    <button class="action-btn delete" onclick="deleteItem(this, 'system-table')">
+                                                        <i class="fas fa-trash"></i>删除
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="row-number"></td>
+                                            <td><strong>客户管理系统</strong></td>
+                                            <td><span class="badge default">业务系统</span></td>
+                                            <td>金融</td>
+                                            <td>2024-01-10</td>
+                                            <td><span class="badge success">启用</span></td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="action-btn edit" onclick="showEditModal('system')">
+                                                        <i class="fas fa-edit"></i>编辑
+                                                    </button>
+                                                    <button class="action-btn delete" onclick="deleteItem(this, 'system-table')">
+                                                        <i class="fas fa-trash"></i>删除
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="row-number"></td>
+                                            <td><strong>财务系统</strong></td>
+                                            <td><span class="badge default">业务系统</span></td>
+                                            <td>金融</td>
+                                            <td>2024-01-15</td>
+                                            <td><span class="badge success">启用</span></td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="action-btn edit" onclick="showEditModal('system')">
+                                                        <i class="fas fa-edit"></i>编辑
+                                                    </button>
+                                                    <button class="action-btn delete" onclick="deleteItem(this, 'system-table')">
+                                                        <i class="fas fa-trash"></i>删除
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="processing" class="sub-tab-content">
+                            <div class="search-bar">
+                                <input type="text" class="search-input" placeholder="搜索数据处理活动..." onkeyup="filterTable('processing-table')">
+                                <button class="btn btn-primary" onclick="showAddModal('processing')">
+                                    <i class="fas fa-plus"></i>
+                                    添加活动
+                                </button>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table" id="processing-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 60px;">序号</th>
+                                            <th>活动名称</th>
+                                            <th>活动类型</th>
+                                            <th>描述</th>
+                                            <th>创建时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="row-number"></td>
+                                            <td><strong>数据收集</strong></td>
+                                            <td><span class="badge success">基础活动</span></td>
+                                            <td>从外部或内部收集数据</td>
+                                            <td>2024-01-01</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="action-btn edit" onclick="showEditModal('processing')">
+                                                        <i class="fas fa-edit"></i>编辑
+                                                    </button>
+                                                    <button class="action-btn delete" onclick="deleteItem(this, 'processing-table')">
+                                                        <i class="fas fa-trash"></i>删除
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="row-number"></td>
+                                            <td><strong>数据存储</strong></td>
+                                            <td><span class="badge success">基础活动</span></td>
+                                            <td>将数据存储到数据库或文件系统</td>
+                                            <td>2024-01-01</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="action-btn edit" onclick="showEditModal('processing')">
+                                                        <i class="fas fa-edit"></i>编辑
+                                                    </button>
+                                                    <button class="action-btn delete" onclick="deleteItem(this, 'processing-table')">
+                                                        <i class="fas fa-trash"></i>删除
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="row-number"></td>
+                                            <td><strong>数据传输</strong></td>
+                                            <td><span class="badge success">基础活动</span></td>
+                                            <td>数据在系统间传输</td>
+                                            <td>2024-01-01</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="action-btn edit" onclick="showEditModal('processing')">
+                                                        <i class="fas fa-edit"></i>编辑
+                                                    </button>
+                                                    <button class="action-btn delete" onclick="deleteItem(this, 'processing-table')">
+                                                        <i class="fas fa-trash"></i>删除
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="protection" class="sub-tab-content">
+                            <div class="search-bar">
+                                <input type="text" class="search-input" placeholder="搜索安全防护措施..." onkeyup="filterTable('protection-table')">
+                                <button class="btn btn-primary" onclick="showAddModal('protection')">
+                                    <i class="fas fa-plus"></i>
+                                    添加措施
+                                </button>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table" id="protection-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 60px;">序号</th>
+                                            <th>措施名称</th>
+                                            <th>分类</th>
+                                            <th>级别</th>
+                                            <th>描述</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="row-number"></td>
+                                            <td><strong>访问控制</strong></td>
+                                            <td><span class="badge warning">技术措施</span></td>
+                                            <td>高</td>
+                                            <td>基于角色的访问控制机制</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="action-btn edit" onclick="showEditModal('protection')">
+                                                        <i class="fas fa-edit"></i>编辑
+                                                    </button>
+                                                    <button class="action-btn delete" onclick="deleteItem(this, 'protection-table')">
+                                                        <i class="fas fa-trash"></i>删除
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="row-number"></td>
+                                            <td><strong>数据加密</strong></td>
+                                            <td><span class="badge warning">技术措施</span></td>
+                                            <td>高</td>
+                                            <td>数据传输和存储加密</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="action-btn edit" onclick="showEditModal('protection')">
+                                                        <i class="fas fa-edit"></i>编辑
+                                                    </button>
+                                                    <button class="action-btn delete" onclick="deleteItem(this, 'protection-table')">
+                                                        <i class="fas fa-trash"></i>删除
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="row-number"></td>
+                                            <td><strong>安全管理制度</strong></td>
+                                            <td><span class="badge default">管理制度</span></td>
+                                            <td>中</td>
+                                            <td>信息安全管理相关制度</td>
+                                            <td>
+                                                <div class="action-buttons">
+                                                    <button class="action-btn edit" onclick="showEditModal('protection')">
+                                                        <i class="fas fa-edit"></i>编辑
+                                                    </button>
+                                                    <button class="action-btn delete" onclick="deleteItem(this, 'protection-table')">
+                                                        <i class="fas fa-trash"></i>删除
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="risk-suggestion" class="tab-content">
+                        <div class="search-bar">
+                            <input type="text" class="search-input" placeholder="搜索处置建议..." onkeyup="filterTable('suggestion-table')">
+                            <button class="btn btn-primary" onclick="showAddModal('suggestion')">
+                                <i class="fas fa-plus"></i>
+                                添加建议
+                            </button>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table" id="suggestion-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px;">序号</th>
+                                        <th>建议标题</th>
+                                        <th>风险等级</th>
+                                        <th>风险类型</th>
+                                        <th>建议内容</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="row-number"></td>
+                                        <td><strong>加强访问控制</strong></td>
+                                        <td><span class="badge warning">高</span></td>
+                                        <td>访问控制</td>
+                                        <td>实施最小权限原则，定期审计权限</td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="action-btn edit" onclick="showEditModal('suggestion')">
+                                                    <i class="fas fa-edit"></i>编辑
+                                                </button>
+                                                <button class="action-btn delete" onclick="deleteItem(this, 'suggestion-table')">
+                                                    <i class="fas fa-trash"></i>删除
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="row-number"></td>
+                                        <td><strong>数据加密传输</strong></td>
+                                        <td><span class="badge warning">高</span></td>
+                                        <td>数据安全</td>
+                                        <td>采用TLS加密传输敏感数据</td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="action-btn edit" onclick="showEditModal('suggestion')">
+                                                    <i class="fas fa-edit"></i>编辑
+                                                </button>
+                                                <button class="action-btn delete" onclick="deleteItem(this, 'suggestion-table')">
+                                                    <i class="fas fa-trash"></i>删除
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="scoring-model" class="tab-content">
+                        <div class="search-bar">
+                            <input type="text" class="search-input" placeholder="搜索评分模型..." onkeyup="filterTable('model-table')">
+                            <button class="btn btn-primary" onclick="showModelConfigModal()">
+                                <i class="fas fa-plus"></i>
+                                添加模型
+                            </button>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table" id="model-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px;">序号</th>
+                                        <th>模型名称</th>
+                                        <th>模型类型</th>
+                                        <th>创建时间</th>
+                                        <th>状态</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="row-number"></td>
+                                        <td><strong>V1评分模型</strong></td>
+                                        <td><span class="badge success">预置模型</span></td>
+                                        <td>2024-01-01</td>
+                                        <td><span class="badge success">启用</span></td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="action-btn view" onclick="viewModelDetail()">
+                                                    <i class="fas fa-eye"></i>查看
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="risk-analysis" class="tab-content">
+                        <div class="sub-tabs">
+                            <div class="sub-tab active" onclick="showRiskModelTab('default-model')">默认分析模型</div>
+                            <div class="sub-tab" onclick="showRiskModelTab('power-model')">电力行业分析模型</div>
+                            <div style="flex: 1;"></div>
+                            <button class="btn btn-primary" onclick="showAddModelModal()">
+                                <i class="fas fa-plus"></i>
+                                添加模型
+                            </button>
+                        </div>
+
+                        <div id="default-model" class="risk-model-content active">
+                            <div class="search-bar">
+                                <input type="text" class="search-input" placeholder="搜索风险等级规则..." onkeyup="filterTable('default-risk-table')">
+                                <button class="btn btn-primary" onclick="showRiskAnalysisModal('add', 'default')">
+                                    <i class="fas fa-plus"></i>
+                                    <span>添加规则</span>
+                                </button>
+                                <button class="btn btn-secondary" onclick="showImportModal()">
+                                    <i class="fas fa-file-import"></i>
+                                    <span>导入模板</span>
+                                </button>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table" id="default-risk-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 60px;">等级</th>
+                                            <th style="width: 180px;">风险危害程度描述</th>
+                                            <th style="width: 100px;">影响对象</th>
+                                            <th>风险危害程度示例</th>
+                                            <th style="width: 140px;">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><span class="badge danger" style="background: #dc2626;">很高</span></td>
+                                            <td><strong>一旦发生数据安全风险，对国家安全造成特别严重危害。</strong></td>
+                                            <td>国家安全</td>
+                                            <td>直接导致特别重大突发事件，严重威胁国家安全，造成大范围社会动荡。</td>
+                                            <td>
+                                                <div class="action-buttons" style="display: flex; gap: 8px;">
+                                                    <button class="action-btn edit" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 60px; padding: 6px 12px;"><i class="fas fa-edit"></i><span>编辑</span></button>
+                                                    <button class="action-btn delete" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 60px; padding: 6px 12px;"><i class="fas fa-trash"></i><span>删除</span></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="badge warning" style="background: #ea580c;">高</span></td>
+                                            <td><strong>一旦发生数据安全风险，会对社会秩序和公共利益造成特别严重危害。</strong></td>
+                                            <td>公共利益</td>
+                                            <td>导致重大人员伤亡、财产损失，引起大范围社会恐慌。</td>
+                                            <td>
+                                                <div class="action-buttons" style="display: flex; gap: 8px;">
+                                                    <button class="action-btn edit" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 60px; padding: 6px 12px;" onclick="showRiskAnalysisModal('edit', 'default')"><i class="fas fa-edit"></i><span>编辑</span></button>
+                                                    <button class="action-btn delete" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 60px; padding: 6px 12px;" onclick="deleteItem(this, 'default-risk-table')"><i class="fas fa-trash"></i><span>删除</span></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="badge info" style="background: #2563eb;">中</span></td>
+                                            <td><strong>一旦发生数据安全风险，会对相关公民、法人和其他组织的合法权益造成严重损害。</strong></td>
+                                            <td>组织</td>
+                                            <td>导致组织遭受重大经济损失，影响正常业务运营。</td>
+                                            <td>
+                                                <div class="action-buttons" style="display: flex; gap: 8px;">
+                                                    <button class="action-btn edit" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 60px; padding: 6px 12px;" onclick="showRiskAnalysisModal('edit', 'default')"><i class="fas fa-edit"></i><span>编辑</span></button>
+                                                    <button class="action-btn delete" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 60px; padding: 6px 12px;" onclick="deleteItem(this, 'default-risk-table')"><i class="fas fa-trash"></i><span>删除</span></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="badge success" style="background: #059669;">低</span></td>
+                                            <td><strong>一旦发生数据安全风险，会对相关公民、法人和其他组织的合法权益造成一般损害。</strong></td>
+                                            <td>个人</td>
+                                            <td>对个人信息主体造成一定困扰，但影响较轻。</td>
+                                            <td>
+                                                <div class="action-buttons" style="display: flex; gap: 8px;">
+                                                    <button class="action-btn edit" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 60px; padding: 6px 12px;" onclick="showRiskAnalysisModal('edit', 'default')"><i class="fas fa-edit"></i><span>编辑</span></button>
+                                                    <button class="action-btn delete" style="display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-width: 60px; padding: 6px 12px;" onclick="deleteItem(this, 'default-risk-table')"><i class="fas fa-trash"></i><span>删除</span></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="power-model" class="risk-model-content">
+                            <div class="step-container">
+                                <div class="step-card">
+                                    <div class="step-number">1</div>
+                                    <i class="fas fa-tags step-icon"></i>
+                                    <div class="step-text">第一步：划分被评估对象类别</div>
+                                </div>
+                                <div class="step-connector">
+                                    <div class="step-line"></div>
+                                    <div class="step-arrow"></div>
+                                </div>
+                                <div class="step-card">
+                                    <div class="step-number">2</div>
+                                    <i class="fas fa-shield-alt step-icon"></i>
+                                    <div class="step-text">第二步：确定受侵害客体</div>
+                                </div>
+                                <div class="step-connector">
+                                    <div class="step-line"></div>
+                                    <div class="step-arrow"></div>
+                                </div>
+                                <div class="step-card">
+                                    <div class="step-number">3</div>
+                                    <i class="fas fa-link step-icon"></i>
+                                    <div class="step-text">第三步：匹配数据安全保护等级</div>
+                                </div>
+                                <div class="step-connector">
+                                    <div class="step-line"></div>
+                                    <div class="step-arrow"></div>
+                                </div>
+                                <div class="step-card">
+                                    <div class="step-number">4</div>
+                                    <i class="fas fa-exclamation-triangle step-icon"></i>
+                                    <div class="step-text">第四步：匹配风险危害程度等级</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="risk-matrix" class="tab-content">
+                        <div class="search-bar">
+                            <input type="text" class="search-input" placeholder="搜索风险评价矩阵..." onkeyup="filterTable('risk-matrix-table')">
+                            <button class="btn btn-primary" onclick="showAddMatrixModal()">
+                                <i class="fas fa-plus"></i>
+                                <span>新增矩阵</span>
+                            </button>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table" id="risk-matrix-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 150px;">矩阵名称</th>
+                                        <th style="width: 150px;">创建时间</th>
+                                        <th style="width: 100px;">状态</th>
+                                        <th style="width: 80px;">操作</th>
+                                        <th style="width: 200px;">备注</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>V1评价矩阵</strong></td>
+                                        <td>2024-01-15 10:30:00</td>
+                                        <td><span class="badge success">启用</span></td>
+                                        <td>
+                                            <button class="action-btn view" onclick="showViewMatrixModal()">
+                                                <i class="fas fa-eye"></i>
+                                                <span>查看</span>
+                                            </button>
+                                        </td>
+                                        <td style="display: flex; gap: 4px;">
+                                            <input type="text" class="form-input remark-input" placeholder="请输入备注" style="flex: 1; font-size: 12px; padding: 4px 8px;">
+                                            <button class="action-btn save-remark" style="padding: 4px 8px; font-size: 11px;" onclick="saveRemark(this)">
+                                                <i class="fas fa-save"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+
+        <div class="modal-overlay" id="add-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="modal-title">添加评估项模板</h3>
+                    <button class="modal-close" onclick="closeModal('add-modal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">名称 *</label>
+                        <input type="text" class="form-input" id="form-name" placeholder="请输入名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">类型</label>
+                        <select class="form-select" id="form-type">
+                            <option value="">请选择类型</option>
+                            <option value="standard">国标模板</option>
+                            <option value="industry">行标模板</option>
+                            <option value="custom">自定义</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-textarea" id="form-desc" placeholder="请输入描述"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeModal('add-modal')">取消</button>
+                    <button class="btn btn-primary" onclick="saveItem()">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="add-matrix-modal">
+            <div class="modal-content" style="width: 90vw !important; max-width: 1200px !important; display: flex; flex-direction: column; max-height: 90vh !important;">
+                <div class="modal-header" style="flex-shrink: 0;">
+                    <h3 class="modal-title">新增风险评价矩阵</h3>
+                    <button class="modal-close" onclick="closeModal('add-matrix-modal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" style="flex: 1; overflow-y: auto !important; overflow-x: hidden !important; padding: 24px !important;">
+                    <div class="form-group" style="margin-bottom: 20px; margin: 0 32px 20px; margin-left: 0;">
+                        <label class="form-label">矩阵名称</label>
+                        <input type="text" class="form-input" id="matrix-name" placeholder="请输入矩阵名称">
+                    </div>
+                    <style>
+                        .risk-matrix-container {
+                            width: 100%;
+                            padding: 20px;
+                            background: #fff;
+                            border-radius: 8px;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+                            overflow-x: hidden;
+                            box-sizing: border-box;
+                            margin-bottom: 20px;
+                        }
+                        .risk-matrix {
+                            width: 100%;
+                            border-collapse: collapse;
+                            text-align: center;
+                        }
+                        .risk-matrix th {
+                            background-color: #2d8cf0;
+                            color: #ffffff;
+                            padding: 12px 8px;
+                            border: 1px solid #e5e7eb;
+                            font-weight: 600;
+                            font-size: 14px;
+                            vertical-align: middle;
+                            white-space: nowrap;
+                        }
+                        .risk-matrix td {
+                            padding: 6px 4px;
+                            border: 1px solid #e5e7eb;
+                            font-size: 13px;
+                            font-weight: 500;
+                            vertical-align: middle;
+                            white-space: nowrap;
+                        }
+                        .level-col {
+                            background-color: #ffffff;
+                            font-weight: 600;
+                        }
+                        .risk-high {
+                            background-color: #f8d7da;
+                            color: #721c24;
+                        }
+                        .risk-medium-high {
+                            background-color: #fff3cd;
+                            color: #856404;
+                        }
+                        .risk-medium {
+                            background-color: #d1ecf1;
+                            color: #0c5460;
+                        }
+                        .risk-low {
+                            background-color: #d4edda;
+                            color: #155724;
+                        }
+                        .risk-very-low {
+                            background-color: #c3e6cb;
+                            color: #155724;
+                        }
+                        .editable-cell input {
+                            width: 90%;
+                            padding: 4px 8px 4px 4px;
+                            border: 1px solid #ccc;
+                            border-radius: 4px;
+                            font-size: 12px;
+                            text-align: left;
+                            background: transparent;
+                            margin-left: 4px;
+                            box-sizing: border-box;
+                        }
+                    </style>
+                    <div class="risk-matrix-container">
+                        <table class="risk-matrix" id="editable-matrix">
+                            <thead>
+                                <tr>
+                                    <th colspan="2" rowspan="2">数据安全风险等级</th>
+                                    <th colspan="5">风险危害程度</th>
+                                </tr>
+                                <tr>
+                                    <th style="background-color: #ffffff; color: #333; border: 2px solid #e5e7eb;">很高</th>
+                                    <th style="background-color: #ffffff; color: #333; border: 2px solid #e5e7eb;">高</th>
+                                    <th style="background-color: #ffffff; color: #333; border: 2px solid #e5e7eb;">较高</th>
+                                    <th style="background-color: #ffffff; color: #333; border: 2px solid #e5e7eb;">中</th>
+                                    <th style="background-color: #ffffff; color: #333; border: 2px solid #e5e7eb;">低</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th rowspan="3">风险发生可能性</th>
+                                    <td class="level-col">高</td>
+                                    <td class="risk-high editable-cell"><input type="text" value="重大安全风险"></td>
+                                    <td class="risk-high editable-cell"><input type="text" value="重大安全风险"></td>
+                                    <td class="risk-medium editable-cell"><input type="text" value="中安全风险"></td>
+                                    <td class="risk-low editable-cell"><input type="text" value="低安全风险"></td>
+                                    <td class="risk-very-low editable-cell"><input type="text" value="轻微安全风险"></td>
+                                </tr>
+                                <tr>
+                                    <td class="level-col">中</td>
+                                    <td class="risk-high editable-cell"><input type="text" value="重大安全风险"></td>
+                                    <td class="risk-medium-high editable-cell"><input type="text" value="高安全风险"></td>
+                                    <td class="risk-medium editable-cell"><input type="text" value="中安全风险"></td>
+                                    <td class="risk-low editable-cell"><input type="text" value="低安全风险"></td>
+                                    <td class="risk-very-low editable-cell"><input type="text" value="轻微安全风险"></td>
+                                </tr>
+                                <tr>
+                                    <td class="level-col">低</td>
+                                    <td class="risk-medium editable-cell"><input type="text" value="中安全风险"></td>
+                                    <td class="risk-medium editable-cell"><input type="text" value="中安全风险"></td>
+                                    <td class="risk-low editable-cell"><input type="text" value="低安全风险"></td>
+                                    <td class="risk-very-low editable-cell"><input type="text" value="轻微安全风险"></td>
+                                    <td class="risk-very-low editable-cell"><input type="text" value="轻微安全风险"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="form-group" style="margin: 0 32px 20px; margin-left: 0;">
+                        <label class="form-label">备注</label>
+                        <textarea class="form-textarea" id="matrix-remark" placeholder="请输入备注信息" style="min-height: 60px; max-height: 100px;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="flex-shrink: 0; border-top: 1px solid #e2e8f0; background: #f8fafc; padding: 16px 24px; display: flex; justify-content: flex-end; gap: 12px;">
+                    <button class="btn btn-secondary" onclick="closeModal('add-matrix-modal')">取消</button>
+                    <button class="btn btn-primary" onclick="saveMatrixItem()">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="view-matrix-modal">
+            <div class="modal-content" style="width: 1180px !important; max-width: 92vw !important;">
+                <div class="modal-header">
+                    <h3 class="modal-title">V1评价矩阵</h3>
+                    <button class="modal-close" onclick="closeModal('view-matrix-modal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" style="max-height: 750px; overflow-y: auto; overflow-x: hidden; padding: 24px 32px !important;">
+                    <style>
+                        .risk-matrix-container {
+                            width: 100%;
+                            margin: 0;
+                            padding: 24px;
+                            background: #fff;
+                            border-radius: 12px;
+                            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+                            box-sizing: border-box;
+                        }
+
+                        .risk-matrix {
+                            width: 100%;
+                            border-collapse: collapse;
+                            text-align: center;
+                            table-layout: fixed;
+                        }
+
+                        .risk-matrix th {
+                            background-color: #2d8cf0;
+                            color: #ffffff;
+                            padding: 20px 12px;
+                            border: 2px solid #2563eb;
+                            font-weight: 600;
+                            font-size: 16px;
+                            vertical-align: middle;
+                        }
+
+                        .risk-matrix td {
+                            padding: 20px 12px;
+                            border: 2px solid #e5e7eb;
+                            font-size: 15px;
+                            font-weight: 500;
+                            vertical-align: middle;
+                        }
+
+                        .level-col {
+                            background-color: #ffffff;
+                            font-weight: 600;
+                        }
+
+                        .risk-high {
+                            background-color: #f8d7da;
+                            color: #721c24;
+                        }
+                        .risk-medium-high {
+                            background-color: #fff3cd;
+                            color: #856404;
+                        }
+                        .risk-medium {
+                            background-color: #d1ecf1;
+                            color: #0c5460;
+                        }
+                        .risk-low {
+                            background-color: #d4edda;
+                            color: #155724;
+                        }
+                        .risk-very-low {
+                            background-color: #c3e6cb;
+                            color: #155724;
+                        }
+                    </style>
+                    <div class="risk-matrix-container">
+                        <table class="risk-matrix">
+                            <thead>
+                                <tr>
+                                    <th colspan="2" rowspan="2">数据安全安全风险等级</th>
+                                    <th colspan="5">风险危害程度</th>
+                                </tr>
+                                <tr>
+                                    <th style="background-color: #ffffff; color: #333; border: 2px solid #e5e7eb;">很高</th>
+                                    <th style="background-color: #ffffff; color: #333; border: 2px solid #e5e7eb;">高</th>
+                                    <th style="background-color: #ffffff; color: #333; border: 2px solid #e5e7eb;">较高</th>
+                                    <th style="background-color: #ffffff; color: #333; border: 2px solid #e5e7eb;">中</th>
+                                    <th style="background-color: #ffffff; color: #333; border: 2px solid #e5e7eb;">低</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th rowspan="3">风险发生可能性</th>
+                                    <td class="level-col">高</td>
+                                    <td class="risk-high">重大安全风险</td>
+                                    <td class="risk-high">重大安全风险</td>
+                                    <td class="risk-medium">中安全风险</td>
+                                    <td class="risk-low">低安全风险</td>
+                                    <td class="risk-very-low">轻微安全风险</td>
+                                </tr>
+                                <tr>
+                                    <td class="level-col">中</td>
+                                    <td class="risk-high">重大安全风险</td>
+                                    <td class="risk-medium-high">高安全风险</td>
+                                    <td class="risk-medium">中安全风险</td>
+                                    <td class="risk-low">低安全风险</td>
+                                    <td class="risk-very-low">轻微安全风险</td>
+                                </tr>
+                                <tr>
+                                    <td class="level-col">低</td>
+                                    <td class="risk-medium">中安全风险</td>
+                                    <td class="risk-medium">中安全风险</td>
+                                    <td class="risk-low">低安全风险</td>
+                                    <td class="risk-very-low">轻微安全风险</td>
+                                    <td class="risk-very-low">轻微安全风险</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="closeModal('view-matrix-modal')">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showAddMatrixModal() {
+            document.getElementById('add-matrix-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function showViewMatrixModal() {
+            document.getElementById('view-matrix-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function saveMatrixItem() {
+            const name = document.getElementById('matrix-name').value;
+            if (!name) {
+                alert('请输入矩阵名称');
+                return;
+            }
+            alert('风险评价矩阵已保存：' + name);
+            closeModal('add-matrix-modal');
+            document.getElementById('matrix-name').value = '';
+            document.getElementById('matrix-levels').value = '5';
+            document.getElementById('matrix-industry').value = '';
+            document.getElementById('matrix-desc').value = '';
+        }
+
+        function saveRemark(btn) {
+            const row = btn.closest('tr');
+            const remarkInput = row.querySelector('.remark-input');
+            const remark = remarkInput.value.trim();
+            if (!remark) {
+                alert('请输入备注内容');
+                return;
+            }
+            const matrixName = row.querySelector('td strong').textContent;
+            alert('备注已保存\n矩阵名称: ' + matrixName + '\n备注内容: ' + remark);
+        }
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.sub-tab').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelectorAll('.sub-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            if (tabId === 'system-template') {
+                document.querySelector('.sub-tab').classList.add('active');
+                document.getElementById('system').classList.add('active');
+            }
+        }
+
+        function showSubTab(subTabId) {
+            document.querySelectorAll('.sub-tab').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelectorAll('.sub-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            document.getElementById(subTabId).classList.add('active');
+        }
+
+        function showAddModal(type) {
+            const titles = {
+                'assessment': '添加评估项模板',
+                'system': '添加系统模板',
+                'processing': '添加数据处理活动',
+                'protection': '添加安全防护措施',
+                'scenario': '添加风险场景',
+                'suggestion': '添加风险处置建议',
+                'model': '添加评分模型',
+                'risk-analysis': '添加风险等级规则'
+            };
+            document.getElementById('modal-title').textContent = titles[type] || '添加';
+            document.getElementById('add-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function showEditModal(type) {
+            if (type === 'model') {
+                document.getElementById('model-config-modal').classList.add('show');
+            } else {
+                const titles = {
+                    'assessment': '编辑评估项模板',
+                    'system': '编辑系统模板',
+                    'processing': '编辑数据处理活动',
+                    'protection': '编辑安全防护措施',
+                    'scenario': '编辑风险场景',
+                    'suggestion': '编辑风险处置建议'
+                };
+                document.getElementById('modal-title').textContent = titles[type] || '编辑';
+                document.getElementById('add-modal').classList.add('show');
+            }
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function saveItem() {
+            const name = document.getElementById('form-name').value;
+            if (!name) {
+                alert('请输入名称');
+                return;
+            }
+            alert('保存成功！');
+            closeModal('add-modal');
+        }
+
+        function deleteItem(btn, tableId) {
+            if (confirm('确定要删除该记录吗？')) {
+                const row = btn.closest('tr');
+                row.remove();
+                updateRowNumbers(tableId);
+            }
+        }
+
+        function validateAndSaveModelConfig() {
+            // 清除之前的错误状态
+            document.querySelectorAll('.risk-input').forEach(input => {
+                input.classList.remove('error');
+            });
+            document.getElementById('range-error').style.display = 'none';
+
+            // 获取风险等级区间配置
+            const highMin = parseFloat(document.getElementById('high-min').value) || 0;
+            const highMax = parseFloat(document.getElementById('high-max').value) || 0;
+            const mediumMin = parseFloat(document.getElementById('medium-min').value) || 0;
+            const mediumMax = parseFloat(document.getElementById('medium-max').value) || 0;
+            const lowMin = parseFloat(document.getElementById('low-min').value) || 0;
+            const lowMax = parseFloat(document.getElementById('low-max').value) || 0;
+
+            // 验证区间配置
+            let isValid = true;
+            let errorInputs = [];
+
+            // 检查数值范围
+            if (highMin < 0 || highMin > 100 || highMax < 0 || highMax > 100) {
+                isValid = false;
+                errorInputs.push('high-min', 'high-max');
+            }
+            if (mediumMin < 0 || mediumMin > 100 || mediumMax < 0 || mediumMax > 100) {
+                isValid = false;
+                errorInputs.push('medium-min', 'medium-max');
+            }
+            if (lowMin < 0 || lowMin > 100 || lowMax < 0 || lowMax > 100) {
+                isValid = false;
+                errorInputs.push('low-min', 'low-max');
+            }
+
+            // 检查区间连续性和无重叠
+            if (highMin !== 0) {
+                isValid = false;
+                errorInputs.push('high-min');
+            }
+            if (highMax !== mediumMin) {
+                isValid = false;
+                errorInputs.push('high-max', 'medium-min');
+            }
+            if (mediumMax !== lowMin) {
+                isValid = false;
+                errorInputs.push('medium-max', 'low-min');
+            }
+            if (lowMax !== 100) {
+                isValid = false;
+                errorInputs.push('low-max');
+            }
+
+            // 检查区间顺序
+            if (highMin >= highMax || mediumMin >= mediumMax || lowMin >= lowMax) {
+                isValid = false;
+                errorInputs.push('high-min', 'high-max', 'medium-min', 'medium-max', 'low-min', 'low-max');
+            }
+
+            if (!isValid) {
+                // 标记错误输入框
+                errorInputs.forEach(id => {
+                    const input = document.getElementById(id);
+                    if (input) input.classList.add('error');
+                });
+                document.getElementById('range-error').style.display = 'block';
+                return;
+            }
+
+            // 验证通过，保存配置
+            alert('配置保存成功！');
+            closeModal('model-config-modal');
+        }
+
+        function updateRowNumbers(tableId) {
+            const table = document.getElementById(tableId);
+            if (table) {
+                const visibleRows = table.querySelectorAll('tbody tr:not([style*="display: none"])');
+                visibleRows.forEach((row, index) => {
+                    const numberCell = row.querySelector('.row-number');
+                    if (numberCell) {
+                        numberCell.textContent = index + 1;
+                    }
+                });
+            }
+        }
+
+        function exportItem() {
+            alert('导出功能开发中...');
+        }
+
+        function filterTable(tableId) {
+            const searchText = document.querySelector('.search-input').value.toLowerCase();
+            const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchText) ? '' : 'none';
+            });
+            updateRowNumbers(tableId);
+        }
+
+        function showModelConfigModal() {
+            document.getElementById('model-config-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function viewModelDetail() {
+            document.getElementById('model-detail-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function saveModelConfig() {
+            alert('配置保存成功！');
+            closeModal('model-config-modal');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateRowNumbers('assessment-table');
+            updateRowNumbers('system-table');
+            updateRowNumbers('processing-table');
+            updateRowNumbers('protection-table');
+            updateRowNumbers('scenario-table');
+            updateRowNumbers('suggestion-table');
+            updateRowNumbers('model-table');
+            updateRowNumbers('default-risk-table');
+            updateRowNumbers('power-risk-table');
+            updateRowNumbers('practice-table');
+        });
+    </script>
+
+    <div class="modal-overlay" id="practice-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="practice-modal-title">添加案例</h3>
+                <button class="modal-close" onclick="closePracticeModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">系统名称</label>
+                    <input type="text" class="form-input" id="practice-system" placeholder="请输入系统名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">业务场景</label>
+                    <input type="text" class="form-input" id="practice-scenario" placeholder="请输入业务场景">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">评估项</label>
+                    <select class="form-select" id="practice-item">
+                        <option value="访问控制">访问控制</option>
+                        <option value="数据加密">数据加密</option>
+                        <option value="日志审计">日志审计</option>
+                        <option value="数据分类分级">数据分类分级</option>
+                        <option value="接口安全">接口安全</option>
+                        <option value="网络安全">网络安全</option>
+                        <option value="应急响应">应急响应</option>
+                        <option value="安全培训">安全培训</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">发现问题</label>
+                    <textarea class="form-textarea" id="practice-problem" rows="3" placeholder="请输入发现的问题"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">给出的建议</label>
+                    <textarea class="form-textarea" id="practice-suggestion" rows="3" placeholder="请输入建议措施"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">风险等级</label>
+                    <select class="form-select" id="practice-risk">
+                        <option value="很高">很高</option>
+                        <option value="高">高</option>
+                        <option value="较高">较高</option>
+                        <option value="中">中</option>
+                        <option value="低">低</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closePracticeModal()">取消</button>
+                <button class="btn btn-primary" onclick="savePractice()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="risk-analysis-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="risk-modal-title">添加风险等级规则</h3>
+                <button class="modal-close" onclick="closeRiskAnalysisModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">风险等级</label>
+                    <select class="form-select" id="risk-level">
+                        <option value="很高">很高</option>
+                        <option value="高">高</option>
+                        <option value="较高">较高</option>
+                        <option value="中">中</option>
+                        <option value="低">低</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">风险危害程度描述</label>
+                    <textarea class="form-textarea" id="risk-description" rows="3" placeholder="请输入风险危害程度描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">影响对象</label>
+                    <select class="form-select" id="risk-object">
+                        <option value="国家安全">国家安全</option>
+                        <option value="公共利益">公共利益</option>
+                        <option value="社会秩序和公共利益">社会秩序和公共利益</option>
+                        <option value="组织">组织</option>
+                        <option value="个人">个人</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">风险危害程度示例</label>
+                    <textarea class="form-textarea" id="risk-example" rows="4" placeholder="请输入风险危害程度示例"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRiskAnalysisModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveRiskAnalysis()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showRiskModelTab(tabId) {
+            document.querySelectorAll('.risk-model-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.sub-tab').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function showPracticeModal(type, row) {
+            const titles = {
+                'add': '添加案例',
+                'edit': '编辑案例'
+            };
+            document.getElementById('practice-modal-title').textContent = titles[type];
+            
+            if (type === 'edit' && row) {
+                const tr = row.parentElement.parentElement;
+                document.getElementById('practice-system').value = tr.cells[1].textContent;
+                document.getElementById('practice-scenario').value = tr.cells[2].textContent;
+                document.getElementById('practice-item').value = tr.cells[3].textContent;
+                document.getElementById('practice-problem').value = tr.cells[4].textContent;
+                document.getElementById('practice-suggestion').value = tr.cells[5].textContent;
+                document.getElementById('practice-risk').value = tr.cells[6].textContent.replace(/<[^>]*>/g, '');
+                currentPracticeRow = tr;
+            } else {
+                document.getElementById('practice-system').value = '';
+                document.getElementById('practice-scenario').value = '';
+                document.getElementById('practice-item').value = '';
+                document.getElementById('practice-problem').value = '';
+                document.getElementById('practice-suggestion').value = '';
+                document.getElementById('practice-risk').value = '中';
+                currentPracticeRow = null;
+            }
+            document.getElementById('practice-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePracticeModal() {
+            document.getElementById('practice-modal').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function savePractice() {
+            const system = document.getElementById('practice-system').value;
+            const scenario = document.getElementById('practice-scenario').value;
+            const item = document.getElementById('practice-item').value;
+            const problem = document.getElementById('practice-problem').value;
+            const suggestion = document.getElementById('practice-suggestion').value;
+            const risk = document.getElementById('practice-risk').value;
+
+            if (!system || !scenario || !item || !problem || !suggestion) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            const riskColors = { '很高': 'danger', '高': 'warning', '较高': 'info', '中': 'default', '低': 'success' };
+
+            if (currentPracticeRow) {
+                currentPracticeRow.cells[1].textContent = system;
+                currentPracticeRow.cells[2].textContent = scenario;
+                currentPracticeRow.cells[3].textContent = item;
+                currentPracticeRow.cells[4].textContent = problem;
+                currentPracticeRow.cells[5].textContent = suggestion;
+                currentPracticeRow.cells[6].innerHTML = `<span class="badge ${riskColors[risk]}">${risk}</span>`;
+                alert('案例修改成功！');
+            } else {
+                const tbody = document.querySelector('#practice-table tbody');
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td></td>
+                    <td>${system}</td>
+                    <td>${scenario}</td>
+                    <td>${item}</td>
+                    <td>${problem}</td>
+                    <td>${suggestion}</td>
+                    <td><span class="badge ${riskColors[risk]}">${risk}</span></td>
+                    <td>
+                        <button class="action-btn edit" onclick="showPracticeModal('edit', this)"><i class="fas fa-edit"></i> 编辑</button>
+                        <button class="action-btn delete" onclick="deleteItem(this, 'practice-table')"><i class="fas fa-trash"></i> 删除</button>
+                    </td>
+                `;
+                tbody.appendChild(newRow);
+                updateRowNumbers('practice-table');
+                alert('案例添加成功！');
+            }
+            closePracticeModal();
+        }
+
+        var currentPracticeRow = null;
+
+        function showRiskAnalysisModal(type, modelType) {
+            const titles = {
+                'add': '添加风险等级规则',
+                'edit': '编辑风险等级规则'
+            };
+            document.getElementById('risk-modal-title').textContent = titles[type] || '添加风险等级规则';
+            document.getElementById('risk-analysis-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeRiskAnalysisModal() {
+            document.getElementById('risk-analysis-modal').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function saveRiskAnalysis() {
+            closeRiskAnalysisModal();
+        }
+
+        function showAddModelModal() {
+            document.getElementById('add-model-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAddModelModal() {
+            document.getElementById('add-model-modal').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function saveNewModel() {
+            closeAddModelModal();
+        }
+    </script>
+
+    <div class="modal-overlay" id="add-model-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加分析模型</h3>
+                <button class="modal-close" onclick="closeAddModelModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">模型名称</label>
+                    <input type="text" class="form-input" id="model-name" placeholder="请输入模型名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">模型描述</label>
+                    <textarea class="form-textarea" id="model-description" rows="3" placeholder="请输入模型描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">适用行业</label>
+                    <select class="form-select" id="model-industry">
+                        <option value="通用">通用</option>
+                        <option value="电力">电力</option>
+                        <option value="金融">金融</option>
+                        <option value="医疗">医疗</option>
+                        <option value="教育">教育</option>
+                        <option value="政务">政务</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeAddModelModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveNewModel()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 评分规则配置弹窗 -->
+    <div class="modal-overlay" id="model-config-modal">
+        <div class="modal-content model-config-modal">
+            <div class="modal-header">
+                <h3>新增评分模型</h3>
+                <button class="modal-close" onclick="closeModal('model-config-modal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body model-config-body">
+                <!-- 模块1：评分项分值配置 -->
+                <div class="config-section">
+                    <h4 class="section-title">一、评分项分值定义</h4>
+                    <p class="section-desc">请配置各评估结果对应的基础分值，「不适用」项不计入总分计算</p>
+                    <div class="score-config-group">
+                        <div class="score-item">
+                            <label class="score-label">符合</label>
+                            <input type="number" class="score-input" id="score-meet" value="1" min="0" step="0.1">
+                        </div>
+                        <div class="score-item">
+                            <label class="score-label">部分符合</label>
+                            <input type="number" class="score-input" id="score-partial" value="0.5" min="0" step="0.1">
+                        </div>
+                        <div class="score-item">
+                            <label class="score-label">不符合</label>
+                            <input type="number" class="score-input" id="score-not-meet" value="0" min="0" step="0.1">
+                        </div>
+                        <div class="score-item">
+                            <label class="score-label">不适用</label>
+                            <input type="text" class="score-input disabled" id="score-not-applicable" value="不计算" disabled>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 模块2：评分计算公式说明 -->
+                <div class="config-section">
+                    <h4 class="section-title">二、评分计算公式</h4>
+                    <div class="formula-display">
+                        <p class="formula-text">可能性计算分值 =（符合项数量 + 0.5 × 部分符合项数量）÷（符合项数量 + 部分符合项数量 + 不符合项数量）×100%</p>
+                        <p class="formula-note">注：不适用项不计入分子与分母的计算</p>
+                    </div>
+                </div>
+
+                <!-- 模块3：风险发生可能性等级映射配置 -->
+                <div class="config-section">
+                    <h4 class="section-title">三、风险发生可能性等级映射</h4>
+                    <p class="section-desc">请配置分值区间对应的风险等级，区间需覆盖0%-100%，无重叠、无间隙</p>
+                    <div class="risk-mapping-group">
+                        <div class="risk-mapping-item">
+                            <label class="risk-label">高风险</label>
+                            <div class="risk-range">
+                                <input type="number" class="risk-input" id="high-min" value="0" min="0" max="100" step="0.01">
+                                <span class="range-separator">~</span>
+                                <input type="number" class="risk-input" id="high-max" value="30" min="0" max="100" step="0.01">
+                                <span class="range-unit">%</span>
+                            </div>
+                            <span class="range-note">（含左不含右）</span>
+                        </div>
+                        <div class="risk-mapping-item">
+                            <label class="risk-label">中风险</label>
+                            <div class="risk-range">
+                                <input type="number" class="risk-input" id="medium-min" value="30" min="0" max="100" step="0.01">
+                                <span class="range-separator">~</span>
+                                <input type="number" class="risk-input" id="medium-max" value="75" min="0" max="100" step="0.01">
+                                <span class="range-unit">%</span>
+                            </div>
+                            <span class="range-note">（含左不含右）</span>
+                        </div>
+                        <div class="risk-mapping-item">
+                            <label class="risk-label">低风险</label>
+                            <div class="risk-range">
+                                <input type="number" class="risk-input" id="low-min" value="75" min="0" max="100" step="0.01">
+                                <span class="range-separator">~</span>
+                                <input type="number" class="risk-input" id="low-max" value="100" min="0" max="100" step="0.01">
+                                <span class="range-unit">%</span>
+                            </div>
+                            <span class="range-note">（含左右）</span>
+                        </div>
+                    </div>
+                    <p class="validation-error" id="range-error" style="display: none;">区间配置不合法，请确保覆盖0%-100%且无重叠</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('model-config-modal')">取消</button>
+                <button class="btn btn-primary" onclick="validateAndSaveModelConfig()">保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 评分模型详情弹窗 -->
+    <div class="modal-overlay" id="model-detail-modal">
+        <div class="modal-content model-config-modal">
+            <div class="modal-header">
+                <h3>查看评分模型规则</h3>
+                <button class="modal-close" onclick="closeModal('model-detail-modal')"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body model-config-body">
+                <!-- 模块1：评分项分值配置 -->
+                <div class="config-section">
+                    <h4 class="section-title">一、评分项分值定义</h4>
+                    <p class="section-desc">请配置各评估结果对应的基础分值，「不适用」项不计入总分计算</p>
+                    <div class="score-config-group">
+                        <div class="score-item">
+                            <label class="score-label">符合</label>
+                            <input type="number" class="score-input" id="view-score-meet" value="1" min="0" step="0.1" disabled>
+                        </div>
+                        <div class="score-item">
+                            <label class="score-label">部分符合</label>
+                            <input type="number" class="score-input" id="view-score-partial" value="0.5" min="0" step="0.1" disabled>
+                        </div>
+                        <div class="score-item">
+                            <label class="score-label">不符合</label>
+                            <input type="number" class="score-input" id="view-score-not-meet" value="0" min="0" step="0.1" disabled>
+                        </div>
+                        <div class="score-item">
+                            <label class="score-label">不适用</label>
+                            <input type="text" class="score-input disabled" id="view-score-not-applicable" value="不计算" disabled>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 模块2：评分计算公式说明 -->
+                <div class="config-section">
+                    <h4 class="section-title">二、评分计算公式</h4>
+                    <div class="formula-display">
+                        <p class="formula-text">可能性计算分值 =（符合项数量 + 0.5 × 部分符合项数量）÷（符合项数量 + 部分符合项数量 + 不符合项数量）×100%</p>
+                        <p class="formula-note">注：不适用项不计入分子与分母的计算</p>
+                    </div>
+                </div>
+
+                <!-- 模块3：风险发生可能性等级映射配置 -->
+                <div class="config-section">
+                    <h4 class="section-title">三、风险发生可能性等级映射</h4>
+                    <p class="section-desc">请配置分值区间对应的风险等级，区间需覆盖0%-100%，无重叠、无间隙</p>
+                    <div class="risk-mapping-group">
+                        <div class="risk-mapping-item">
+                            <label class="risk-label">高风险</label>
+                            <div class="risk-range">
+                                <input type="number" class="risk-input" id="view-high-min" value="0" min="0" max="100" step="0.01" disabled>
+                                <span class="range-separator">~</span>
+                                <input type="number" class="risk-input" id="view-high-max" value="30" min="0" max="100" step="0.01" disabled>
+                                <span class="range-unit">%</span>
+                            </div>
+                            <span class="range-note">（含左不含右）</span>
+                        </div>
+                        <div class="risk-mapping-item">
+                            <label class="risk-label">中风险</label>
+                            <div class="risk-range">
+                                <input type="number" class="risk-input" id="view-medium-min" value="30" min="0" max="100" step="0.01" disabled>
+                                <span class="range-separator">~</span>
+                                <input type="number" class="risk-input" id="view-medium-max" value="75" min="0" max="100" step="0.01" disabled>
+                                <span class="range-unit">%</span>
+                            </div>
+                            <span class="range-note">（含左不含右）</span>
+                        </div>
+                        <div class="risk-mapping-item">
+                            <label class="risk-label">低风险</label>
+                            <div class="risk-range">
+                                <input type="number" class="risk-input" id="view-low-min" value="75" min="0" max="100" step="0.01" disabled>
+                                <span class="range-separator">~</span>
+                                <input type="number" class="risk-input" id="view-low-max" value="100" min="0" max="100" step="0.01" disabled>
+                                <span class="range-unit">%</span>
+                            </div>
+                            <span class="range-note">（含左右）</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal('model-detail-modal')">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var riskMatrixList = [
+            { id: 'v1', name: 'V1评价矩阵', description: '默认评价矩阵' }
+        ];
+
+        function getRiskMatrixOptions() {
+            return riskMatrixList;
+        }
+
+        function addRiskMatrix(matrix) {
+            riskMatrixList.push(matrix);
+        }
+
+        function updateRiskMatrix(id, updatedMatrix) {
+            const index = riskMatrixList.findIndex(m => m.id === id);
+            if (index !== -1) {
+                riskMatrixList[index] = { ...riskMatrixList[index], ...updatedMatrix };
+            }
+        }
+
+        function deleteRiskMatrix(id) {
+            riskMatrixList = riskMatrixList.filter(m => m.id !== id);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1962 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目管理 - ENST</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #60a5fa;
+            --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --border-light: #f1f5f9;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-sidebar: #0f172a;
+            --bg-sidebar-hover: #1e293b;
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.15);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --radius-full: 9999px;
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+            --transition-slow: 0.35s ease;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            color: var(--text-primary);
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 230px;
+            background: linear-gradient(180deg, var(--bg-sidebar) 0%, #1e293b 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            z-index: 10;
+            border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+            overflow: hidden;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+        }
+
+        .logo {
+            padding: 28px 22px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .logo-content {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-light), #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1px;
+        }
+
+        .logo-title {
+            font-size: 12px;
+            color: #64748b;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        .logo-subtitle {
+            font-size: 11px;
+            color: #94a3b8;
+            letter-spacing: 0.3px;
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 8px 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 11px 22px;
+            margin: 4px 12px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            color: #cbd5e1;
+            font-size: 13px;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-sidebar-hover);
+            color: #fff;
+        }
+
+        .nav-item.active {
+            background: var(--primary-gradient);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .nav-item i {
+            width: 18px;
+            height: 18px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .nav-item span {
+            flex: 1;
+            text-align: left;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg-gradient);
+        }
+
+        .top-header {
+            height: 64px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            z-index: 5;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .menu-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .menu-btn:hover {
+            background: var(--border-color);
+        }
+
+        .header-tabs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-tab {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .header-tab:hover {
+            background: var(--border-color);
+        }
+
+        .header-tab.active {
+            background: var(--primary-gradient);
+            color: #fff;
+        }
+
+        .header-tab i {
+            margin-right: 6px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+            color: var(--text-secondary);
+        }
+
+        .header-btn:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            margin-left: 20px;
+            padding-left: 20px;
+            border-left: 1px solid var(--border-light);
+        }
+
+        .user-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            margin-right: 12px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .user-detail {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .user-role {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .content-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px;
+            background: var(--bg-gradient);
+        }
+
+        .content-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .content-body::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .content-body::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .content-body::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .page-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all var(--transition-normal);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(59, 130, 246, 0.45);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
+            color: var(--primary-dark);
+        }
+
+        .btn-sm {
+            padding: 6px 16px;
+            font-size: 13px;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
+            color: var(--primary-dark);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #fff;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .search-input {
+            flex: 1;
+            max-width: 400px;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            transition: all var(--transition-fast);
+            background: var(--bg-primary);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-tab {
+            padding: 8px 20px;
+            border-radius: var(--radius-full);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+        }
+
+        .filter-tab.active {
+            background: var(--primary-gradient);
+            color: #fff;
+        }
+
+        .filter-tab:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .filter-tab.active:hover {
+            background: var(--primary-dark);
+        }
+
+        .card {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all var(--transition-normal);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-icon.blue {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+            color: var(--primary-color);
+        }
+
+        .stat-icon.green {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+            color: var(--success-color);
+        }
+
+        .stat-icon.orange {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+            color: var(--warning-color);
+        }
+
+        .stat-icon.red {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+            color: var(--danger-color);
+        }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .data-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table tbody tr {
+            transition: background var(--transition-fast);
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge.pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .badge.in-progress {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-color);
+        }
+
+        .badge.completed {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success-color);
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--border-light);
+            border-radius: 3px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 120px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-gradient);
+            border-radius: 3px;
+            transition: width var(--transition-normal);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all var(--transition-fast);
+        }
+
+        .action-btn.view {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-color);
+        }
+
+        .action-btn.view:hover {
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        .action-btn.edit {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .action-btn.edit:hover {
+            background: rgba(245, 158, 11, 0.15);
+        }
+
+        .action-btn.delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+        }
+
+        .action-btn.delete:hover {
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .action-btn.start {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success-color);
+        }
+
+        .action-btn.start:hover {
+            background: rgba(34, 197, 94, 0.15);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-normal);
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            border-radius: var(--radius-xl);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: var(--shadow-xl);
+            transform: scale(0.95) translateY(20px);
+            transition: all var(--transition-normal);
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all var(--transition-fast);
+        }
+
+        .modal-close:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 24px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            transition: all var(--transition-fast);
+            background: var(--bg-primary);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            transition: all var(--transition-fast);
+            background: var(--bg-primary);
+            cursor: pointer;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            transition: all var(--transition-fast);
+            background: var(--bg-primary);
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-light);
+            background: var(--bg-secondary);
+        }
+
+        .team-members {
+            margin-top: 16px;
+        }
+
+        .team-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .team-list {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .team-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            background: var(--bg-primary);
+        }
+
+        .team-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .team-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 12px;
+        }
+
+        .team-info {
+            flex: 1;
+        }
+
+        .team-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .team-role {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .team-remove {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: rgba(239, 68, 68, 0.08);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--danger-color);
+            transition: all var(--transition-fast);
+        }
+
+        .team-remove:hover {
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .template-options {
+            margin-top: 16px;
+        }
+
+        .template-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .template-item:hover {
+            border-color: var(--primary-color);
+            background: rgba(59, 130, 246, 0.04);
+        }
+
+        .template-item.selected {
+            border-color: var(--primary-color);
+            background: rgba(59, 130, 246, 0.06);
+        }
+
+        .template-radio {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            margin-right: 14px;
+            position: relative;
+            transition: all var(--transition-fast);
+        }
+
+        .template-item.selected .template-radio {
+            border-color: var(--primary-color);
+        }
+
+        .template-item.selected .template-radio::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            background: var(--primary-color);
+            border-radius: 50%;
+        }
+
+        .template-info {
+            flex: 1;
+        }
+
+        .template-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .template-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .project-detail-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .project-detail-info {
+            flex: 1;
+        }
+
+        .project-detail-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .project-detail-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .project-detail-status {
+            padding: 6px 16px;
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .project-detail-status.pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+
+        .project-detail-status.in-progress {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-color);
+        }
+
+        .project-detail-status.completed {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success-color);
+        }
+
+        .detail-section {
+            margin-bottom: 28px;
+        }
+
+        .detail-section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-light);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 32px;
+            color: var(--text-muted);
+        }
+
+        .empty-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .empty-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <img src="logo.png" alt="ENST">
+                </div>
+                <div class="logo-content">
+                    <div class="logo-title">ENST</div>
+                    <div class="logo-subtitle">数据安全风险评估工具</div>
+                </div>
+            </div>
+            <nav class="nav-menu">
+                <div class="nav-item active" onclick="navigateTo('项目管理页面.html')">
+                    <i class="fas fa-folder-open"></i>
+                    <span>项目管理</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('评估方案-评估团队.html')">
+                    <i class="fas fa-users"></i>
+                    <span>评估方案</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('信息调研.html')">
+                    <i class="fas fa-search"></i>
+                    <span>信息调研</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('现场测评.html')">
+                    <i class="fas fa-check-square"></i>
+                    <span>现场测评</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('汇总分析.html')">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>汇总分析</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('报告管理.html')">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>报告管理</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('知识库管理页面.html')">
+                    <i class="fas fa-book-open"></i>
+                    <span>知识库管理</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>系统设置</span>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div class="header-left">
+                    <button class="menu-btn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="header-tabs">
+                        <div class="header-tab active">
+                            <i class="fas fa-folder-open"></i>
+                            项目管理
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="header-btn" title="设置">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button class="header-btn" title="全屏">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button class="header-btn" title="帮助">
+                        <i class="fas fa-question-circle"></i>
+                    </button>
+                    <div class="user-info">
+                        <div class="user-avatar">T</div>
+                        <div class="user-detail">
+                            <div class="user-name">test039</div>
+                            <div class="user-role">管理员</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-body" id="content-body">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">项目管理</h1>
+                        <p class="page-desc">管理数据安全风险评估项目的全生命周期</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="window.location.href='创建项目页面.html'">
+                        <i class="fas fa-plus"></i>
+                        创建新项目
+                    </button>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">
+                            <i class="fas fa-folder-open"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">24</div>
+                            <div class="stat-label">全部项目</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">8</div>
+                            <div class="stat-label">待开始</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">
+                            <i class="fas fa-play"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">12</div>
+                            <div class="stat-label">进行中</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value">4</div>
+                            <div class="stat-label">已完成</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="search-bar">
+                        <input type="text" class="search-input" placeholder="搜索项目名称、编号..." onkeyup="filterProjects()">
+                        <div class="filter-tabs">
+                            <div class="filter-tab active" onclick="filterByStatus('all')">全部</div>
+                            <div class="filter-tab" onclick="filterByStatus('pending')">待开始</div>
+                            <div class="filter-tab" onclick="filterByStatus('in-progress')">进行中</div>
+                            <div class="filter-tab" onclick="filterByStatus('completed')">已完成</div>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">序号</th>
+                                    <th>项目名称</th>
+                                    <th>项目编号</th>
+                                    <th>评估单位</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="project-table-body">
+                                <tr>
+                                    <td class="row-number"></td>
+                                    <td><strong>XX银行数据安全评估项目</strong></td>
+                                    <td>ENST-2024-001</td>
+                                    <td>XX银行股份有限公司</td>
+                                    <td><span class="badge in-progress">进行中</span></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-btn view" onclick="viewProject('ENST-2024-001')">
+                                                <i class="fas fa-eye"></i>
+                                                查看
+                                            </button>
+                                            <button class="action-btn start" onclick="startAssessment('ENST-2024-001')">
+                                                <i class="fas fa-play"></i>
+                                                开始评估
+                                            </button>
+                                            <button class="action-btn edit" onclick="editProject('ENST-2024-001')">
+                                                <i class="fas fa-edit"></i>
+                                                编辑
+                                            </button>
+                                            <button class="action-btn delete" onclick="deleteProjectRow(this)">
+                                                <i class="fas fa-trash"></i>
+                                                删除
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="row-number"></td>
+                                    <td><strong>XX电商平台数据安全评估</strong></td>
+                                    <td>ENST-2024-002</td>
+                                    <td>XX电子商务有限公司</td>
+                                    <td><span class="badge completed">已完成</span></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-btn view" onclick="viewProject('ENST-2024-002')">
+                                                <i class="fas fa-eye"></i>
+                                                查看
+                                            </button>
+                                            <button class="action-btn start" onclick="startAssessment('ENST-2024-002')">
+                                                <i class="fas fa-play"></i>
+                                                开始评估
+                                            </button>
+                                            <button class="action-btn edit" onclick="editProject('ENST-2024-002')">
+                                                <i class="fas fa-edit"></i>
+                                                编辑
+                                            </button>
+                                            <button class="action-btn delete" onclick="deleteProjectRow(this)">
+                                                <i class="fas fa-trash"></i>
+                                                删除
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="row-number"></td>
+                                    <td><strong>XX医疗系统数据安全评估</strong></td>
+                                    <td>ENST-2024-003</td>
+                                    <td>XX医院管理有限公司</td>
+                                    <td><span class="badge pending">待开始</span></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-btn view" onclick="viewProject('ENST-2024-003')">
+                                                <i class="fas fa-eye"></i>
+                                                查看
+                                            </button>
+                                            <button class="action-btn start" onclick="startAssessment('ENST-2024-003')">
+                                                <i class="fas fa-play"></i>
+                                                开始评估
+                                            </button>
+                                            <button class="action-btn edit" onclick="editProject('ENST-2024-003')">
+                                                <i class="fas fa-edit"></i>
+                                                编辑
+                                            </button>
+                                            <button class="action-btn delete" onclick="deleteProjectRow(this)">
+                                                <i class="fas fa-trash"></i>
+                                                删除
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="row-number"></td>
+                                    <td><strong>XX政务平台数据安全评估</strong></td>
+                                    <td>ENST-2024-004</td>
+                                    <td>XX市政务服务中心</td>
+                                    <td><span class="badge in-progress">进行中</span></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-btn view" onclick="viewProject('ENST-2024-004')">
+                                                <i class="fas fa-eye"></i>
+                                                查看
+                                            </button>
+                                            <button class="action-btn start" onclick="startAssessment('ENST-2024-004')">
+                                                <i class="fas fa-play"></i>
+                                                开始评估
+                                            </button>
+                                            <button class="action-btn edit" onclick="editProject('ENST-2024-004')">
+                                                <i class="fas fa-edit"></i>
+                                                编辑
+                                            </button>
+                                            <button class="action-btn delete" onclick="deleteProjectRow(this)">
+                                                <i class="fas fa-trash"></i>
+                                                删除
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="row-number"></td>
+                                    <td><strong>XX教育平台数据安全评估</strong></td>
+                                    <td>ENST-2024-005</td>
+                                    <td>XX教育科技有限公司</td>
+                                    <td><span class="badge completed">已完成</span></td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="action-btn view" onclick="viewProject('ENST-2024-005')">
+                                                <i class="fas fa-eye"></i>
+                                                查看
+                                            </button>
+                                            <button class="action-btn start" onclick="startAssessment('ENST-2024-005')">
+                                                <i class="fas fa-play"></i>
+                                                开始评估
+                                            </button>
+                                            <button class="action-btn edit" onclick="editProject('ENST-2024-005')">
+                                                <i class="fas fa-edit"></i>
+                                                编辑
+                                            </button>
+                                            <button class="action-btn delete" onclick="deleteProjectRow(this)">
+                                                <i class="fas fa-trash"></i>
+                                                删除
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div class="modal-overlay" id="create-project-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="create-modal-title">创建新项目</h3>
+                    <button class="modal-close" onclick="closeModal('create-project-modal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">项目名称 *</label>
+                        <input type="text" class="form-input" id="project-name" placeholder="请输入项目名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">项目编号</label>
+                        <input type="text" class="form-input" id="project-code" placeholder="系统自动生成">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">评估单位 *</label>
+                        <input type="text" class="form-input" id="project-organization" placeholder="请输入评估单位名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">系统与基础数据</label>
+                        <select class="form-select" id="system-template" onchange="updateRelatedOptions()">
+                            <option value="">请选择系统模板</option>
+                            <option value="oa">OA办公系统</option>
+                            <option value="crm">客户管理系统</option>
+                            <option value="finance">财务系统</option>
+                            <option value="custom">自定义系统</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">评估模板</label>
+                        <select class="form-select" id="assessment-template" onchange="updateRelatedOptions()">
+                            <option value="">请选择评估模板</option>
+                            <option value="gb">国标模板</option>
+                            <option value="industry">行业标准模板</option>
+                            <option value="power">电力行业模板</option>
+                            <option value="custom">自定义模板</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">系统类型</label>
+                        <select class="form-select" id="reference-case" onchange="updateRelatedOptions()">
+                            <option value="">请选择系统类型</option>
+                            <option value="power-monitor">电力监控系统</option>
+                            <option value="management">管理信息系统</option>
+                            <option value="communication">通信网络设施</option>
+                            <option value="data-resource">数据资源</option>
+                            <option value="other">其他系统平台</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">风险危害程度分析模型</label>
+                        <select class="form-select" id="risk-analysis-model" onchange="updateRelatedOptions()">
+                            <option value="">请选择风险分析模型</option>
+                            <option value="default">默认分析模型</option>
+                            <option value="power">电力行业分析模型</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">评分模型</label>
+                        <select class="form-select" id="project-model">
+                            <option value="v1">V1评分模型</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">项目描述</label>
+                        <textarea class="form-textarea" id="project-desc" placeholder="请输入项目描述"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeModal('create-project-modal')">取消</button>
+                    <button class="btn btn-primary" onclick="createProject()">确定</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="project-detail-modal">
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h3 class="modal-title">项目详情</h3>
+                    <button class="modal-close" onclick="closeModal('project-detail-modal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="project-detail-header">
+                        <div class="project-detail-info">
+                            <h2 class="project-detail-title" id="detail-name">XX银行数据安全评估项目</h2>
+                            <div class="project-detail-meta">
+                                <span><i class="fas fa-hashtag" style="margin-right: 4px;"></i>ENST-2024-001</span>
+                                <span><i class="fas fa-building" style="margin-right: 4px;"></i>XX银行股份有限公司</span>
+                                <span><i class="fas fa-calendar" style="margin-right: 4px;"></i>2024-01-15</span>
+                            </div>
+                        </div>
+                        <span class="project-detail-status in-progress" id="detail-status">进行中</span>
+                    </div>
+
+                    <div class="detail-section">
+                        <h3 class="detail-section-title">基本信息</h3>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <div class="detail-label">项目负责人</div>
+                                <div class="detail-value">张三</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">联系电话</div>
+                                <div class="detail-value">138****8888</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">评估周期</div>
+                                <div class="detail-value">2024-01-15 ~ 2024-02-15</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">系统与基础数据</div>
+                                <div class="detail-value" id="detail-system">OA办公系统</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">评估模板</div>
+                                <div class="detail-value" id="detail-template">国标模板</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">系统类型</div>
+                                <div class="detail-value" id="detail-case">电力监控系统</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">风险危害程度分析模型</div>
+                                <div class="detail-value" id="detail-risk-model">电力行业分析模型</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <div class="team-header">
+                            <h3 class="detail-section-title">团队成员</h3>
+                            <button class="btn btn-sm btn-primary" onclick="showAddMemberModal()">
+                                <i class="fas fa-plus"></i>
+                                添加成员
+                            </button>
+                        </div>
+                        <div class="team-list" id="team-list">
+                            <div class="team-item">
+                                <div class="team-avatar">张</div>
+                                <div class="team-info">
+                                    <div class="team-name">张三</div>
+                                    <div class="team-role">项目负责人</div>
+                                </div>
+                                <button class="team-remove" onclick="removeMember(this)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="team-item">
+                                <div class="team-avatar">李</div>
+                                <div class="team-info">
+                                    <div class="team-name">李四</div>
+                                    <div class="team-role">评估员</div>
+                                </div>
+                                <button class="team-remove" onclick="removeMember(this)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="team-item">
+                                <div class="team-avatar">王</div>
+                                <div class="team-info">
+                                    <div class="team-name">王五</div>
+                                    <div class="team-role">技术专家</div>
+                                </div>
+                                <button class="team-remove" onclick="removeMember(this)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <div class="team-header">
+                            <h3 class="detail-section-title">模板操作</h3>
+                        </div>
+                        <button class="btn btn-secondary" style="width: 100%;" onclick="saveAsTemplate()">
+                            <i class="fas fa-save"></i>
+                            存入模板
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeModal('project-detail-modal')">关闭</button>
+                    <button class="btn btn-primary" onclick="editProjectFromDetail()">编辑项目</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="add-member-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">添加团队成员</h3>
+                    <button class="modal-close" onclick="closeModal('add-member-modal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">成员姓名 *</label>
+                        <input type="text" class="form-input" id="member-name" placeholder="请输入成员姓名">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">所属单位 *</label>
+                        <input type="text" class="form-input" id="member-organization" placeholder="请输入所属单位">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">角色权限 *</label>
+                        <select class="form-select" id="member-role">
+                            <option value="leader">项目负责人</option>
+                            <option value="evaluator">评估员</option>
+                            <option value="expert">技术专家</option>
+                            <option value="viewer">查看员</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeModal('add-member-modal')">取消</button>
+                    <button class="btn btn-primary" onclick="addMember()">添加</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="save-template-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">存入模板</h3>
+                    <button class="modal-close" onclick="closeModal('save-template-modal')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">模板名称 *</label>
+                        <input type="text" class="form-input" id="template-name" placeholder="请输入模板名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">模板描述</label>
+                        <textarea class="form-textarea" id="template-desc" placeholder="请输入模板描述"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">保存内容</label>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" checked>
+                                <span style="font-size: 13px; color: var(--text-secondary);">评估模板选择</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" checked>
+                                <span style="font-size: 13px; color: var(--text-secondary);">评分模型设置</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox">
+                                <span style="font-size: 13px; color: var(--text-secondary);">团队成员配置</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeModal('save-template-modal')">取消</button>
+                    <button class="btn btn-primary" onclick="confirmSaveTemplate()">保存模板</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var currentEditId = null;
+
+        var projects = [
+            {
+                id: 'ENST-2024-001',
+                name: '数据安全评估项目一',
+                organization: '测试企业A',
+                system: 'OA办公系统',
+                systemValue: 'oa',
+                template: '国标模板',
+                templateValue: 'gb',
+                referenceCase: '银行业数据安全评估案例',
+                caseValue: 'bank',
+                riskModel: '电力行业分析模型',
+                riskModelValue: 'power',
+                description: '第一个评估项目'
+            },
+            {
+                id: 'ENST-2024-002',
+                name: '数据安全评估项目二',
+                organization: '测试企业B',
+                system: '客户管理系统',
+                systemValue: 'crm',
+                template: '行业标准模板',
+                templateValue: 'industry',
+                referenceCase: '电力行业数据安全评估案例',
+                caseValue: 'power',
+                riskModel: '默认分析模型',
+                riskModelValue: 'default',
+                description: '第二个评估项目'
+            },
+            {
+                id: 'ENST-2024-003',
+                name: '数据安全评估项目三',
+                organization: '测试企业C',
+                system: '财务系统',
+                systemValue: 'finance',
+                template: '电力行业模板',
+                templateValue: 'power',
+                referenceCase: '医疗行业数据安全评估案例',
+                caseValue: 'medical',
+                riskModel: '电力行业分析模型',
+                riskModelValue: 'power',
+                description: '第三个评估项目'
+            },
+            {
+                id: 'ENST-2024-004',
+                name: '数据安全评估项目四',
+                organization: '测试企业D',
+                system: '自定义系统',
+                systemValue: 'custom',
+                template: '自定义模板',
+                templateValue: 'custom',
+                referenceCase: '无',
+                caseValue: 'none',
+                riskModel: '默认分析模型',
+                riskModelValue: 'default',
+                description: '第四个评估项目'
+            },
+            {
+                id: 'ENST-2024-005',
+                name: '数据安全评估项目五',
+                organization: '测试企业E',
+                system: 'OA办公系统',
+                systemValue: 'oa',
+                template: '国标模板',
+                templateValue: 'gb',
+                referenceCase: '银行业数据安全评估案例',
+                caseValue: 'bank',
+                riskModel: '电力行业分析模型',
+                riskModelValue: 'power',
+                description: '第五个评估项目'
+            }
+        ];
+
+        function showCreateProjectModal() {
+            document.getElementById('create-modal-title').textContent = '创建新项目';
+            document.getElementById('project-name').value = '';
+            document.getElementById('project-organization').value = '';
+            document.getElementById('system-template').value = '';
+            document.getElementById('assessment-template').value = '';
+            document.getElementById('reference-case').value = '';
+            document.getElementById('risk-analysis-model').value = '';
+            document.getElementById('project-desc').value = '';
+            currentEditId = null;
+            document.getElementById('create-project-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function selectTemplate(templateId) {
+            document.querySelectorAll('.template-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+        }
+
+        function createProject() {
+            const projectName = document.getElementById('project-name').value;
+            if (!projectName) {
+                alert('请输入项目名称');
+                return;
+            }
+            const systemTemplate = document.getElementById('system-template');
+            const assessmentTemplate = document.getElementById('assessment-template');
+            const referenceCase = document.getElementById('reference-case');
+            const riskAnalysisModel = document.getElementById('risk-analysis-model');
+
+            const systemMap = { 'oa': 'OA办公系统', 'crm': '客户管理系统', 'finance': '财务系统', 'custom': '自定义系统' };
+            const templateMap = { 'gb': '国标模板', 'industry': '行业标准模板', 'power': '电力行业模板', 'custom': '自定义模板' };
+            const caseMap = { 'power-monitor': '电力监控系统', 'management': '管理信息系统', 'communication': '通信网络设施', 'data-resource': '数据资源', 'other': '其他系统平台' };
+            const riskModelMap = { 'default': '默认分析模型', 'power': '电力行业分析模型' };
+
+            if (currentEditId) {
+                alert('项目修改成功！');
+            } else {
+                alert('项目创建成功！\n\n项目信息：\n- 系统与基础数据：' + (systemMap[systemTemplate.value] || '未选择') +
+                      '\n- 评估模板：' + (templateMap[assessmentTemplate.value] || '未选择') +
+                      '\n- 系统类型：' + (caseMap[referenceCase.value] || '未选择') +
+                      '\n- 风险危害程度分析模型：' + (riskModelMap[riskAnalysisModel.value] || '未选择'));
+            }
+            closeModal('create-project-modal');
+
+            document.getElementById('project-name').value = '';
+            document.getElementById('project-organization').value = '';
+            document.getElementById('system-template').value = '';
+            document.getElementById('assessment-template').value = '';
+            document.getElementById('reference-case').value = '';
+            document.getElementById('risk-analysis-model').value = '';
+            document.getElementById('project-desc').value = '';
+            currentEditId = null;
+        }
+
+        function updateRelatedOptions() {
+            const systemTemplate = document.getElementById('system-template').value;
+            const assessmentTemplate = document.getElementById('assessment-template').value;
+            const referenceCase = document.getElementById('reference-case').value;
+            const riskAnalysisModel = document.getElementById('risk-analysis-model').value;
+        }
+
+        var currentViewProjectId = null;
+
+        function viewProject(projectId) {
+            currentViewProjectId = projectId;
+            const project = projects.find(p => p.id === projectId);
+            if (project) {
+                document.getElementById('detail-name').textContent = project.name;
+                document.getElementById('detail-system').textContent = project.system || 'OA办公系统';
+                document.getElementById('detail-template').textContent = project.template || '国标模板';
+                document.getElementById('detail-case').textContent = project.referenceCase || '银行业数据安全评估案例';
+                document.getElementById('detail-risk-model').textContent = project.riskModel || '电力行业分析模型';
+            }
+            document.getElementById('project-detail-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function editProject(projectId) {
+            window.location.href = '编辑项目页面.html?id=' + projectId;
+        }
+
+        function deleteProject(projectId) {
+            if (confirm('确定要删除该项目吗？')) {
+                alert('项目删除成功');
+            }
+        }
+
+        function startAssessment(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (project) {
+                const confirmResult = confirm('确定要开始评估该项目吗？\n\n项目信息：\n- 项目名称：' + project.name +
+                    '\n- 评估单位：' + project.organization +
+                    '\n- 系统与基础数据：' + (project.system || 'OA办公系统') +
+                    '\n- 评估模板：' + (project.template || '国标模板'));
+                
+                if (confirmResult) {
+                    window.location.href = '评估方案-评估团队.html?projectId=' + projectId;
+                }
+            }
+        }
+
+        function showAddMemberModal() {
+            closeModal('project-detail-modal');
+            document.getElementById('add-member-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function addMember() {
+            const memberName = document.getElementById('member-name').value;
+            if (!memberName) {
+                alert('请输入成员姓名');
+                return;
+            }
+            alert('成员添加成功！');
+            closeModal('add-member-modal');
+            document.getElementById('project-detail-modal').classList.add('show');
+        }
+
+        function removeMember(btn) {
+            btn.parentElement.remove();
+        }
+
+        function saveAsTemplate() {
+            closeModal('project-detail-modal');
+            document.getElementById('save-template-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function confirmSaveTemplate() {
+            const templateName = document.getElementById('template-name').value;
+            if (!templateName) {
+                alert('请输入模板名称');
+                return;
+            }
+            alert('模板保存成功！');
+            closeModal('save-template-modal');
+        }
+
+        function editProjectFromDetail() {
+            closeModal('project-detail-modal');
+            document.body.style.overflow = '';
+            if (currentViewProjectId) {
+                window.location.href = '编辑项目页面.html?id=' + currentViewProjectId;
+            }
+        }
+
+        function filterProjects() {
+            const searchText = document.querySelector('.search-input').value.toLowerCase();
+            const rows = document.querySelectorAll('#project-table-body tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchText) ? '' : 'none';
+            });
+        }
+
+        function filterByStatus(status) {
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            const rows = document.querySelectorAll('#project-table-body tr');
+            rows.forEach(row => {
+                if (status === 'all') {
+                    row.style.display = '';
+                } else {
+                    const badge = row.querySelector('.badge');
+                    if (badge && badge.classList.contains(status)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+            updateRowNumbers();
+        }
+
+        function updateRowNumbers() {
+            const visibleRows = document.querySelectorAll('#project-table-body tr:not([style*="display: none"])');
+            visibleRows.forEach((row, index) => {
+                const numberCell = row.querySelector('.row-number');
+                if (numberCell) {
+                    numberCell.textContent = index + 1;
+                }
+            });
+        }
+
+        function deleteProjectRow(btn) {
+            if (confirm('确定要删除该项目吗？')) {
+                const row = btn.closest('tr');
+                row.remove();
+                updateRowNumbers();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateRowNumbers();
+        });
+    </script>
+</body>
+</html>

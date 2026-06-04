@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>报告管理 - ENST</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #60a5fa;
+            --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --border-light: #f1f5f9;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --bg-sidebar: #0f172a;
+            --bg-sidebar-hover: #1e293b;
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --radius-full: 9999px;
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+            --transition-slow: 0.35s ease;
+        }
+
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            color: var(--text-primary);
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 230px;
+            background: linear-gradient(180deg, var(--bg-sidebar) 0%, #1e293b 100%);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            z-index: 10;
+            border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+            overflow: hidden;
+        }
+
+        .sidebar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+        }
+
+        .logo {
+            padding: 28px 22px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .logo-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-subtitle {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 8px 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 11px 22px;
+            margin: 4px 12px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            color: #cbd5e1;
+            font-size: 13px;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-sidebar-hover);
+            color: #fff;
+        }
+
+        .nav-item.active {
+            background: var(--primary-gradient);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .nav-item i {
+            width: 18px;
+            height: 18px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .nav-item span {
+            flex: 1;
+            text-align: left;
+        }
+
+        .nav-item.active i {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .top-header {
+            height: 60px;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .menu-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .menu-btn:hover {
+            background: var(--border-color);
+        }
+
+        .header-tabs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-tab {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .header-tab:hover {
+            background: var(--border-color);
+        }
+
+        .header-tab.active {
+            background: var(--primary-gradient);
+            color: #fff;
+        }
+
+        .header-tab i {
+            margin-right: 6px;
+        }
+
+        .header-tab-close {
+            margin-left: 8px;
+            opacity: 0.7;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+            color: var(--text-secondary);
+        }
+
+        .header-btn:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-left: 12px;
+            border-left: 1px solid var(--border-color);
+        }
+
+        .user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .user-name {
+            font-size: 13px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .step-nav {
+            display: flex;
+            align-items: center;
+            margin-bottom: 28px;
+            padding: 28px 32px;
+            background: var(--bg-primary);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-nav::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            margin-right: 0;
+            position: relative;
+            flex: 1;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .step:last-child {
+            margin-right: 0;
+        }
+
+        .step-num {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 600;
+            margin-right: 14px;
+            transition: all var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+            position: relative;
+        }
+
+        .step.active .step-num {
+            background: var(--primary-gradient);
+            color: #fff;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .step-text {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+            transition: all var(--transition-fast);
+        }
+
+        .step.active .step-text {
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .step-arrow {
+            color: #cbd5e0;
+            margin: 0 16px;
+            font-size: 16px;
+            transition: all var(--transition-fast);
+        }
+
+        .step.active .step-arrow {
+            color: var(--primary-light);
+        }
+
+        .step.last .step-arrow {
+            display: none;
+        }
+
+        .content-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px;
+        }
+
+        .content-area {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+
+        .tabs-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .tabs-header {
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: none;
+            gap: 20px;
+            margin-bottom: 16px;
+        }
+
+        .tab-item {
+            padding: 16px 24px;
+            font-size: 14px;
+            color: #4E5969;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            position: relative;
+        }
+
+        .tab-item:hover {
+            color: #165DFF;
+        }
+
+        .tab-item.active {
+            color: #165DFF;
+            font-weight: 600;
+        }
+
+        .tab-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -16px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #165DFF;
+        }
+
+        .tabs-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 12px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(59, 130, 246, 0.45);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
+        }
+
+        .btn-secondary {
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
+            color: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
+            color: var(--primary-dark);
+        }
+
+        .tabs-content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table thead {
+            background: var(--bg-tertiary);
+        }
+
+        .data-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: top;
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .action-btn {
+            color: var(--primary-color);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+            margin-right: 12px;
+        }
+
+        .action-btn:hover {
+            text-decoration: underline;
+        }
+
+        .action-btn.delete {
+            color: var(--danger-color);
+        }
+
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            gap: 12px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .pagination select {
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            color: var(--text-secondary);
+            background: var(--bg-primary);
+            cursor: pointer;
+        }
+
+        .pagination button {
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--bg-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all var(--transition-fast);
+        }
+
+        .pagination button:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .pagination button.active {
+            background: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination input {
+            width: 50px;
+            padding: 6px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <img src="logo.png" alt="ENST">
+                </div>
+                <div class="logo-content">
+                    <div class="logo-title">ENST</div>
+                    <div class="logo-subtitle">数据安全风险评估工具</div>
+                </div>
+            </div>
+            
+            <div class="nav-menu">
+                <div class="nav-item" onclick="navigateTo('项目管理页面.html')">
+                    <i class="fas fa-folder-open"></i>
+                    <span>项目管理</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('评估方案-评估团队.html')">
+                    <i class="fas fa-users"></i>
+                    <span>评估方案</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('信息调研.html')">
+                    <i class="fas fa-search"></i>
+                    <span>信息调研</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('现场测评.html')">
+                    <i class="fas fa-check-square"></i>
+                    <span>现场测评</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('汇总分析.html')">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>汇总分析</span>
+                </div>
+                <div class="nav-item active" onclick="navigateTo('报告管理.html')">
+                    <i class="fas fa-file-pdf"></i>
+                    <span>报告管理</span>
+                </div>
+                <div class="nav-item" onclick="navigateTo('知识库管理页面.html')">
+                    <i class="fas fa-book-open"></i>
+                    <span>知识库管理</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>系统设置</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="top-header">
+                <div class="header-left">
+                    <button class="menu-btn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="header-tabs">
+                        <div class="header-tab active">
+                            <i class="fas fa-file-pdf"></i>
+                            报告管理
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="header-btn" title="设置">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button class="header-btn" title="全屏">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                    <button class="header-btn" title="帮助">
+                        <i class="fas fa-question-circle"></i>
+                    </button>
+                    <div class="user-info">
+                        <div class="user-avatar">T</div>
+                        <span class="user-name">test039</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-wrapper scrollbar-thin">
+                <div class="step-nav">
+                    <div class="step" onclick="navigateTo('项目管理-基本信息.html')">
+                        <span class="step-num">1</span>
+                        <span class="step-text">基本信息</span>
+                        <span class="step-arrow">></span>
+                    </div>
+                    <div class="step" onclick="navigateTo('评估方案-评估团队.html')">
+                        <span class="step-num">2</span>
+                        <span class="step-text">评估方案</span>
+                        <span class="step-arrow">></span>
+                    </div>
+                    <div class="step" onclick="navigateTo('信息调研.html')">
+                        <span class="step-num">3</span>
+                        <span class="step-text">信息调研</span>
+                        <span class="step-arrow">></span>
+                    </div>
+                    <div class="step" onclick="navigateTo('现场测评.html')">
+                        <span class="step-num">4</span>
+                        <span class="step-text">现场测评</span>
+                        <span class="step-arrow">></span>
+                    </div>
+                    <div class="step" onclick="navigateTo('汇总分析.html')">
+                        <span class="step-num">5</span>
+                        <span class="step-text">汇总分析</span>
+                        <span class="step-arrow">></span>
+                    </div>
+                    <div class="step last active">
+                        <span class="step-num">6</span>
+                        <span class="step-text">报告管理</span>
+                    </div>
+                </div>
+
+                <div class="content-area">
+                    <div class="tabs-container">
+                        <div class="tabs-header">
+                            <div class="tab-item active">报告管理</div>
+                        </div>
+
+                        <div class="tabs-toolbar">
+                            <div class="toolbar-left"></div>
+                            <div class="toolbar-right">
+                                <button class="btn btn-primary" onclick="generateReport()">
+                                    <i class="fas fa-file-export"></i>
+                                    生成
+                                </button>
+                                <button class="btn btn-secondary" onclick="refreshData()">
+                                    <i class="fas fa-sync-alt"></i>
+                                    刷新
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="tabs-content">
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>序号</th>
+                                            <th>类型</th>
+                                            <th>生成状态</th>
+                                            <th>生成时间</th>
+                                            <th>创建人</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>1</td>
+                                            <td>数据安全风险评估报告</td>
+                                            <td>生成完毕</td>
+                                            <td>2025-08-27 09:56:43</td>
+                                            <td>test039</td>
+                                            <td>
+                                                <span class="action-btn" onclick="downloadReport(0)">下载</span>
+                                                <span class="action-btn delete" onclick="deleteReport(0)">删除</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="pagination">
+                            <span>共 1 条</span>
+                            <select id="page-size">
+                                <option value="10">10条/页</option>
+                                <option value="20">20条/页</option>
+                                <option value="50">50条/页</option>
+                                <option value="100">100条/页</option>
+                            </select>
+                            <button disabled>&lt;</button>
+                            <button class="active">1</button>
+                            <button disabled>&gt;</button>
+                            <span>前往</span>
+                            <input type="number" value="1" min="1" max="1">
+                            <span>页</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        function generateReport() {
+            alert('正在生成报告...');
+        }
+
+        function refreshData() {
+            alert('数据已刷新');
+        }
+
+        function downloadReport(index) {
+            alert('正在下载报告...');
+        }
+
+        function deleteReport(index) {
+            if (confirm('确定要删除此报告吗？')) {
+                alert('报告已删除');
+            }
+        }
+    </script>
+</body>
+</html>

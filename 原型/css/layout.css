@@ -1,0 +1,236 @@
+/* 应用容器 */
+.app-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* 侧边栏 */
+.sidebar {
+    width: 230px;
+    background: linear-gradient(180deg, var(--bg-sidebar) 0%, #1e293b 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-xl);
+    position: relative;
+    z-index: 10;
+    border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+    overflow: hidden;
+}
+
+.sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary-gradient);
+}
+
+/* Logo区域 */
+.logo {
+    padding: 28px 22px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+}
+
+.logo-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    flex-shrink: 0;
+    overflow: hidden;
+    background: transparent;
+}
+
+.logo-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.logo-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.logo-text {
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary-light), #fff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 1px;
+}
+
+.logo-title {
+    font-size: 12px;
+    color: #64748b;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+.logo-subtitle {
+    font-size: 11px;
+    color: #94a3b8;
+    letter-spacing: 0.3px;
+}
+
+/* 主内容区 */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg-gradient);
+}
+
+/* 顶部头部 */
+.top-header {
+    height: 64px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    z-index: 5;
+}
+
+.header {
+    height: 65px;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    z-index: 5;
+}
+
+/* 内容区域 */
+.content-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px;
+    background: var(--bg-gradient);
+}
+
+/* 头部左侧 */
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 菜单按钮 */
+.menu-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--bg-tertiary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+}
+
+.menu-btn:hover {
+    background: var(--border-color);
+}
+
+/* 头部中间 */
+.header-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+/* 头部右侧 */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 头部按钮 */
+.header-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--bg-tertiary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    color: var(--text-secondary);
+}
+
+.header-btn:hover {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
+
+/* 用户信息 */
+.user-info {
+    display: flex;
+    align-items: center;
+    margin-left: 20px;
+    padding-left: 20px;
+    border-left: 1px solid var(--border-light);
+}
+
+.user-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    margin-right: 12px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.user-detail {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.user-role {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 1px;
+}
