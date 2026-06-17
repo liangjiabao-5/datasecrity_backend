@@ -64,6 +64,31 @@ RESULT_ALIASES = {
     "不适用": "NOT_APPLICABLE",
 }
 
+IMPORT_FIELD_LABELS = {
+    "item_id": "检查项ID",
+    "item_code": "检查项编号",
+    "sheet_name": "工作表",
+    "category": "一级分类",
+    "subcategory": "二级分类",
+    "check_point": "检查要点",
+    "evaluation_result": "符合情况",
+    "evaluation_record": "评估结果",
+}
+
+IMPORT_READONLY_FIELD_ATTRS = [
+    ("item_id", "id"),
+    ("item_code", "item_code"),
+    ("sheet_name", "sheet_name"),
+    ("category", "category"),
+    ("subcategory", "subcategory"),
+    ("check_point", "check_point"),
+]
+
+RESULT_IMPORT_ERROR_REASON = (
+    "符合情况列只能填写符合、基本符合、不符合、不适用或对应枚举值 "
+    "COMPLIANT、PARTIAL、NON_COMPLIANT、NOT_APPLICABLE。"
+)
+
 
 def catalog(project_id: str) -> list[dict]:
     get_project(project_id)
@@ -282,15 +307,18 @@ def import_records_workbook(project_id: str, file) -> dict:
             continue
         item = _item_from_import_row(session, project_id, row, column_map)
         if not item:
-            errors.append({"rowNo": row_no, "field": "itemId", "reason": "Assessment item not found."})
+            errors.append(_import_error(row_no, "item_id", "未找到对应检查项，请使用最新导出模板。"))
             continue
         result = _cell_value(row, column_map, "evaluation_result")
         editable_values = [result, _cell_value(row, column_map, "evaluation_record")]
         if not any(value not in (None, "") for value in editable_values):
             continue
+        row_errors = _validate_import_readonly_fields(item, row, column_map, row_no)
         normalized_result = _normalize_result(result)
         if result and not normalized_result:
-            errors.append({"rowNo": row_no, "field": "evaluationResult", "reason": "Unsupported evaluation result."})
+            row_errors.append(_import_error(row_no, "evaluation_result", RESULT_IMPORT_ERROR_REASON))
+        if row_errors:
+            errors.extend(row_errors)
             continue
         record = _get_or_create_record(session, project_id, item.id)
         record.evaluation_result = normalized_result
@@ -422,6 +450,30 @@ def _match_item_by_import_context(
         if len(matches) == 1:
             return matches[0]
     return matches[0] if len(matches) == 1 else None
+
+
+def _validate_import_readonly_fields(
+    item: ProjectAssessmentItem,
+    row: tuple,
+    column_map: dict[str, int],
+    row_no: int,
+) -> list[dict]:
+    errors = []
+    for key, attr in IMPORT_READONLY_FIELD_ATTRS:
+        if key not in column_map:
+            continue
+        value = _cell_value(row, column_map, key)
+        if key == "item_id" and value in (None, ""):
+            continue
+        expected = getattr(item, attr)
+        if _import_text(value) != _import_text(expected):
+            field_label = IMPORT_FIELD_LABELS[key]
+            errors.append(_import_error(row_no, key, f"{field_label}与系统检查项不一致，请使用最新导出模板。"))
+    return errors
+
+
+def _import_error(row_no: int, field_key: str, reason: str) -> dict:
+    return {"rowNo": row_no, "field": IMPORT_FIELD_LABELS.get(field_key, field_key), "reason": reason}
 
 
 def _cell_value(row: tuple, column_map: dict[str, int], key: str):

@@ -560,10 +560,10 @@
 
         .form-label {
             display: block;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
             color: #434343;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             position: relative;
             line-height: 1.4;
         }
@@ -947,14 +947,16 @@
         }
 
         .table-section {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
         }
 
         .table-section h3 {
-            font-size: 14px;
+            font-size: 15px;
             color: var(--text-secondary);
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-light);
         }
 
         .data-table {
@@ -991,6 +993,55 @@
 
         .data-table tbody tr:last-child td {
             border-bottom: none;
+        }
+
+        .table-section .table-header-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 8px;
+        }
+
+        .btn-add-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 14px;
+            font-size: 12px;
+            border: 1px dashed var(--primary-color);
+            background: rgba(59, 130, 246, 0.06);
+            color: var(--primary-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .btn-add-row:hover {
+            background: rgba(59, 130, 246, 0.12);
+            border-color: var(--primary-dark);
+        }
+
+        .btn-del-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 3px 10px;
+            font-size: 12px;
+            border: 1px solid var(--danger-color);
+            background: rgba(239, 68, 68, 0.06);
+            color: var(--danger-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .btn-del-row:hover {
+            background: rgba(239, 68, 68, 0.14);
+            border-color: #dc2626;
+        }
+
+        .td-operations {
+            text-align: center;
+            white-space: nowrap;
         }
 
         .table-actions {
@@ -1250,8 +1301,7 @@
                 </div>
 
                 <div class="sub-tabs">
-                    <div class="sub-tab active" data-tab="basic">数据处理者基本情况调研</div>
-                    <div class="sub-tab" data-tab="system">业务和信息系统调研</div>
+                    <div class="sub-tab active" data-tab="system">业务和信息系统调研</div>
                     <div class="sub-tab" data-tab="asset">数据资产调研</div>
                     <div class="sub-tab" data-tab="processing">数据处理活动调研</div>
                     <div class="sub-tab" data-tab="protection">安全防护措施调研</div>
@@ -1276,189 +1326,47 @@
                 </div>
 
                 <div class="form-container">
-                    <div class="tab-content active" id="basic-tab">
-                        <div class="table-section">
-                            <h3>1. 单位基本信息</h3>
-                            <div class="form-row">
+                    <div class="tab-content active" id="system-tab">
+                        <div class="grid-row">
+                            <div class="grid-col-12">
                                 <div class="form-group">
-                                    <label class="form-label">单位名称</label>
-                                    <input type="text" class="form-input" placeholder="请输入单位名称">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">法人和其他组织统一社会信用代码</label>
-                                    <input type="text" class="form-input" placeholder="请输入统一社会信用代码">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">办公地址</label>
-                                    <input type="text" class="form-input" placeholder="请输入办公地址">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">法定代表人信息</label>
-                                    <input type="text" class="form-input" placeholder="请输入法定代表人信息">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">人员规模</label>
-                                    <input type="text" class="form-input" placeholder="请输入人员规模">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">经营范围</label>
-                                    <input type="text" class="form-input" placeholder="请输入经营范围">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">数据安全负责人及其职务</label>
-                                    <input type="text" class="form-input" placeholder="请输入数据安全负责人及其职务">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">联系方式</label>
-                                    <input type="text" class="form-input" placeholder="请输入联系方式">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>2. 单位性质</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <div class="select-wrapper">
-                                        <select class="form-select">
-                                            <option value="">请选择单位性质</option>
-                                            <option value="党政机关">党政机关</option>
-                                            <option value="事业单位">事业单位</option>
-                                            <option value="企业">企业</option>
-                                            <option value="社会团体">社会团体</option>
-                                            <option value="其他">其他</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>3. 是否属于特定类型数据处理者</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <input type="text" class="form-input" placeholder="例如政务数据处理者、大型网络平台运营者、关键信息基础设施运营者等">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>4. 所属电力行业类别</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">该数据处理者在电力行业产业链中所属的具体环节或扮演的市场角色，如果数据处理者承担多个市场角色，可全部列举。<br><span style="font-weight: 400; color: #666; font-size: 12px;">分类：A. 发电侧［例如：火力发电、水力发电、核能发电、新能源发电等］ B. 电网侧［例如：输电、变电、配电、综合运营（如省/市供电公司）］ C. 用电与售电侧［例如：电网售电、独立售电、负荷聚合商、重要用户］ D. 市场交易［例如：电力交易中心、绿证交易］ E. 技术与服务支撑［例如：规划设计、科研院所、设备供应商、第三方技术服务商］</span></label>
-                                    <input type="text" class="form-input" placeholder="请输入所属电力行业类别">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>5. 运营地区</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">业务运营地区</label>
-                                    <input type="text" class="form-input" placeholder="请输入业务运营地区">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">开展数据处理活动所在国家和地区</label>
-                                    <input type="text" class="form-input" placeholder="请输入开展数据处理活动所在国家和地区">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>6. 业务情况</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">主要业务范围</label>
-                                    <textarea class="form-input" placeholder="参见所属电力行业类别，详细描述业务范围" style="width: 100%; min-height: 80px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">业务规模</label>
-                                    <input type="text" class="form-input" placeholder="如发电量/覆盖人群等">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>7. 行政许可</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">数据处理相关服务取得行政许可情况</label>
-                                    <textarea class="form-input" placeholder="请输入数据处理相关服务取得行政许可情况" style="width: 100%; min-height: 80px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="tab-content" id="system-tab">
-                        <div class="table-section">
-                            <h3>1. 信息系统名称</h3>
-                            <div class="form-row">
-                                <div class="form-group">
+                                    <label class="form-label">信息系统名称</label>
                                     <input type="text" class="form-input" placeholder="请输入信息系统名称">
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>2. 业务功能描述</h3>
-                            <div class="form-row">
+                            <div class="grid-col-12">
                                 <div class="form-group">
-                                    <textarea class="form-input" placeholder="请描述业务功能" style="width: 100%; min-height: 80px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+                                    <label class="form-label">业务功能描述</label>
+                                    <textarea class="form-textarea" placeholder="请描述业务功能"></textarea>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="table-section">
-                            <h3>3. 业务服务对象</h3>
-                            <div class="form-row">
+                        <div class="grid-row">
+                            <div class="grid-col-8">
                                 <div class="form-group">
+                                    <label class="form-label">业务服务对象</label>
                                     <input type="text" class="form-input" placeholder="请输入业务服务对象">
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>4. 业务用户规模</h3>
-                            <div class="form-row">
+                            <div class="grid-col-8">
                                 <div class="form-group">
+                                    <label class="form-label">业务用户规模</label>
                                     <input type="text" class="form-input" placeholder="请输入业务用户规模">
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>5. 业务覆盖地域</h3>
-                            <div class="form-row">
+                            <div class="grid-col-8">
                                 <div class="form-group">
+                                    <label class="form-label">业务覆盖地域</label>
                                     <input type="text" class="form-input" placeholder="请输入业务覆盖地域">
                                 </div>
                             </div>
                         </div>
 
-                        <div class="table-section">
-                            <h3>6. 网络安全等级保护备案</h3>
-                            <div class="form-row">
+                        <div class="grid-row">
+                            <div class="grid-col-12">
                                 <div class="form-group">
+                                    <label class="form-label">网络安全等级保护备案等级</label>
                                     <div class="select-wrapper">
                                         <select class="form-select">
                                             <option value="">请选择等级</option>
@@ -1471,39 +1379,38 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>7. 业务相关部门信息</h3>
-                            <div class="form-row">
+                            <div class="grid-col-12">
                                 <div class="form-group">
+                                    <label class="form-label">业务相关部门信息</label>
                                     <input type="text" class="form-input" placeholder="请输入业务相关部门信息">
                                 </div>
                             </div>
                         </div>
 
-                        <div class="table-section">
-                            <h3>8. 数据范围</h3>
-                            <div class="form-row">
+                        <div class="grid-row" style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                            <div class="grid-col-12">
                                 <div class="form-group">
-                                    <label class="form-label">数据范围</label>
-                                    <div class="checkbox-group">
-                                        <div class="checkbox-item">
-                                            <input type="checkbox" id="data-scope-general">
-                                            <label for="data-scope-general">一般数据</label>
-                                        </div>
-                                        <div class="checkbox-item">
-                                            <input type="checkbox" id="data-scope-personal">
-                                            <label for="data-scope-personal">个人信息</label>
-                                        </div>
-                                        <div class="checkbox-item">
-                                            <input type="checkbox" id="data-scope-important">
-                                            <label for="data-scope-important">重要数据</label>
-                                        </div>
-                                        <div class="checkbox-item">
-                                            <input type="checkbox" id="data-scope-core">
-                                            <label for="data-scope-core">核心数据</label>
-                                        </div>
+                                    <label class="form-label">上传拓扑图</label>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <button type="button" class="btn btn-secondary" style="padding: 8px 16px;" onclick="document.getElementById('topology-file').click();">
+                                            <i class="fas fa-upload"></i>
+                                            <span>上传拓扑图</span>
+                                        </button>
+                                        <input type="file" id="topology-file" style="display: none;" onchange="updateFileName('topology-file', 'topology-filename');">
+                                        <span id="topology-filename" style="color: #64748b; font-size: 14px;">未选择文件</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid-col-12">
+                                <div class="form-group">
+                                    <label class="form-label">上传数据流转图</label>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <button type="button" class="btn btn-secondary" style="padding: 8px 16px;" onclick="document.getElementById('flowchart-file').click();">
+                                            <i class="fas fa-upload"></i>
+                                            <span>上传数据流转图</span>
+                                        </button>
+                                        <input type="file" id="flowchart-file" style="display: none;" onchange="updateFileName('flowchart-file', 'flowchart-filename');">
+                                        <span id="flowchart-filename" style="color: #64748b; font-size: 14px;">未选择文件</span>
                                     </div>
                                 </div>
                             </div>
@@ -1514,20 +1421,24 @@
                     <div class="tab-content" id="asset-tab">
                         <div class="table-section">
                             <h3 style="text-align: center; margin-bottom: 16px;">数据资产情况</h3>
+                            <div class="table-header-bar">
+                                <button type="button" class="btn-add-row" onclick="addAssetRow(this)"><i class="fas fa-plus"></i> 增加行</button>
+                            </div>
                             <table class="data-table" style="width: 100%;">
                                 <thead>
                                     <tr>
-                                        <th style="width: 7%;">数据名称</th>
-                                        <th style="width: 8%;">数据形态</th>
-                                        <th style="width: 8%;">数据范围</th>
-                                        <th style="width: 8%;">数据规模</th>
-                                        <th style="width: 8%;">数据来源</th>
-                                        <th style="width: 10%;">数据存储分布情况</th>
-                                        <th style="width: 10%;">数据流转情况</th>
-                                        <th style="width: 10%;">是否进行分类分级</th>
-                                        <th style="width: 8%;">数据类别</th>
-                                        <th style="width: 8%;">数据级别</th>
-                                        <th style="width: 10%;">是否为个人信息</th>
+                                        <th style="width: 6%;">数据名称</th>
+                                        <th style="width: 7%;">数据形态</th>
+                                        <th style="width: 7%;">数据范围</th>
+                                        <th style="width: 7%;">数据规模</th>
+                                        <th style="width: 7%;">数据来源</th>
+                                        <th style="width: 9%;">数据存储分布情况</th>
+                                        <th style="width: 9%;">数据流转情况</th>
+                                        <th style="width: 9%;">是否进行分类分级</th>
+                                        <th style="width: 7%;">数据类别</th>
+                                        <th style="width: 7%;">数据级别</th>
+                                        <th style="width: 9%;">是否为个人信息</th>
+                                        <th style="width: 6%;">操作</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1543,6 +1454,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                     <tr>
                                         <td><input type="text" class="form-input" placeholder="数据名称" style="padding: 4px 8px; font-size: 12px; text-align: center;"></td>
@@ -1556,6 +1468,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                     <tr>
                                         <td><input type="text" class="form-input" placeholder="数据名称" style="padding: 4px 8px; font-size: 12px; text-align: center;"></td>
@@ -1569,6 +1482,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                     <tr>
                                         <td><input type="text" class="form-input" placeholder="数据名称" style="padding: 4px 8px; font-size: 12px; text-align: center;"></td>
@@ -1582,6 +1496,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1606,15 +1521,19 @@
                         <!-- 个人信息情况表 -->
                         <div class="table-section" style="margin-top: 24px;">
                             <h3 style="text-align: center; margin-bottom: 16px;">个人信息情况</h3>
+                            <div class="table-header-bar">
+                                <button type="button" class="btn-add-row" onclick="addAssetRow(this)"><i class="fas fa-plus"></i> 增加行</button>
+                            </div>
                             <table class="data-table" style="width: 100%;">
                                 <thead>
                                     <tr>
-                                        <th style="width: 16%;">数据名称</th>
-                                        <th style="width: 18%;">个人信息类别</th>
-                                        <th style="width: 16%;">规模</th>
-                                        <th style="width: 16%;">敏感程度</th>
-                                        <th style="width: 16%;">数据来源</th>
-                                        <th style="width: 18%;">业务流转情况</th>
+                                        <th style="width: 14%;">数据名称</th>
+                                        <th style="width: 16%;">个人信息类别</th>
+                                        <th style="width: 14%;">规模</th>
+                                        <th style="width: 14%;">敏感程度</th>
+                                        <th style="width: 14%;">数据来源</th>
+                                        <th style="width: 16%;">业务流转情况</th>
+                                        <th style="width: 12%;">操作</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1625,6 +1544,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                     <tr>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
@@ -1633,6 +1553,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                     <tr>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
@@ -1641,6 +1562,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                     <tr>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
@@ -1649,6 +1571,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1665,14 +1588,18 @@
                         <!-- 重要数据情况表 -->
                         <div class="table-section" style="margin-top: 24px;">
                             <h3 style="text-align: center; margin-bottom: 16px;">重要数据情况</h3>
+                            <div class="table-header-bar">
+                                <button type="button" class="btn-add-row" onclick="addAssetRow(this)"><i class="fas fa-plus"></i> 增加行</button>
+                            </div>
                             <table class="data-table" style="width: 100%;">
                                 <thead>
                                     <tr>
-                                        <th style="width: 20%;">数据名称</th>
-                                        <th style="width: 20%;">重要数据类别</th>
-                                        <th style="width: 20%;">规模</th>
-                                        <th style="width: 20%;">数据来源</th>
-                                        <th style="width: 20%;">业务流转情况</th>
+                                        <th style="width: 17%;">数据名称</th>
+                                        <th style="width: 17%;">重要数据类别</th>
+                                        <th style="width: 17%;">规模</th>
+                                        <th style="width: 17%;">数据来源</th>
+                                        <th style="width: 17%;">业务流转情况</th>
+                                        <th style="width: 15%;">操作</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1682,6 +1609,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                     <tr>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
@@ -1689,6 +1617,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                     <tr>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
@@ -1696,6 +1625,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                     <tr>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
@@ -1703,6 +1633,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1711,14 +1642,18 @@
                         <!-- 核心数据情况表 -->
                         <div class="table-section" style="margin-top: 24px;">
                             <h3 style="text-align: center; margin-bottom: 16px;">核心数据情况</h3>
+                            <div class="table-header-bar">
+                                <button type="button" class="btn-add-row" onclick="addAssetRow(this)"><i class="fas fa-plus"></i> 增加行</button>
+                            </div>
                             <table class="data-table" style="width: 100%;">
                                 <thead>
                                     <tr>
-                                        <th style="width: 20%;">数据名称</th>
-                                        <th style="width: 20%;">核心数据类别</th>
-                                        <th style="width: 20%;">规模</th>
-                                        <th style="width: 20%;">数据来源</th>
-                                        <th style="width: 20%;">业务流转情况</th>
+                                        <th style="width: 17%;">数据名称</th>
+                                        <th style="width: 17%;">核心数据类别</th>
+                                        <th style="width: 17%;">规模</th>
+                                        <th style="width: 17%;">数据来源</th>
+                                        <th style="width: 17%;">业务流转情况</th>
+                                        <th style="width: 15%;">操作</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1728,6 +1663,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                     <tr>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
@@ -1735,6 +1671,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                     <tr>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
@@ -1742,6 +1679,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                     <tr>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
@@ -1749,6 +1687,7 @@
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
                                         <td><input type="text" class="form-input" placeholder="" style="padding: 4px 8px; font-size: 12px;"></td>
+                                        <td class="td-operations"><button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1794,309 +1733,511 @@
                         </div>
 
                         <div class="table-section">
-                            <h3>数据收集</h3>
+                            <h3>数据收集情况</h3>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">数据收集渠道</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据收集）指数据的来源途径，包括内部系统、第三方合作平台、传感器设备、公开数据集等">
+                                    <label class="form-label">数据收集的场景</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="scene-online">
+                                            <label for="scene-online">线上采集</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="scene-offline">
+                                            <label for="scene-offline">线下采集</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="scene-partner">
+                                            <label for="scene-partner">与合作方收集</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="scene-other">
+                                            <label for="scene-other">其他：</label>
+                                            <input type="text" class="form-input" placeholder="请填写其他场景" style="width: 120px; padding: 4px 8px; font-size: 12px;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group half">
+                                    <label class="form-label">收集的数据规模</label>
+                                    <div style="display: flex; align-items: center;">
+                                        <input type="text" class="form-input" placeholder="数据日增" style="flex: 1;">
+                                        <span style="margin: 0 8px;">GB</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">收集方式</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据收集）指数据采集的具体方法，如API接口调用、爬虫抓取、用户提交、自动化采集等">
+                                    <label class="form-label">收集的方式</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="method-sensor">
+                                            <label for="method-sensor">传感器采集</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="method-crawler">
+                                            <label for="method-crawler">爬虫采集</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="method-input">
+                                            <label for="method-input">录入采集</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="method-import">
+                                            <label for="method-import">导入采集</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="method-api">
+                                            <label for="method-api">接口采集</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="method-other">
+                                            <label for="method-other">其他：</label>
+                                            <input type="text" class="form-input" placeholder="请填写其他方式" style="width: 120px; padding: 4px 8px; font-size: 12px;">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">数据范围</label>
-                                    <input type="text" class="form-input" placeholder="具体涵盖的数据类型，包括但不限于个人信息、财务数据、运营数据、客户反馈、市场调研数据等">
+                                    <label class="form-label">是否涉及个人/个人敏感数据</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="personal-yes">
+                                            <label for="personal-yes">是</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="personal-no">
+                                            <label for="personal-no">否</label>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">收集目的</label>
-                                    <input type="text" class="form-input" placeholder="明确收集数据的具体用途，如市场分析、产品改进、客户服务、内部管理等">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">收集频率</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据收集）指数据收集的时间间隔，如实时收集、每日更新、每周汇总等">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">外部数据源</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据收集，且来源为外部数据源）指从外部获取的数据来源，包括合作伙伴、公共数据库、第三方服务商等">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">合同协议</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据收集，且来源为外部数据源）涉及数据收集的相关合同条款，确保数据获取的合法性和合规性">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">相关系统</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据收集）收集数据的系统名称">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">在被评估方公共场所安装图像采集、个人身份识别设备的情况</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据收集）且数据包含个人信息，收集数据的系统名称">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>数据存储</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">数据存储方式</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据存储）数据存储的具体方法和技术，包括集中式存储、分布式存储、块存储、文件存储、对象存储等">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">数据中心</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据存储）如用到数据中心，数据中心名称">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">存储系统</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据存储）使用的存储系统：如传统的数据库系统（SQL和NoSQL）、大数据平台（如Hadoop、Spark）、云存储服务（如AWS S3、阿里云OSS）、网络硬盘（如OneDrive、百度网盘）、存储介质（如硬盘、SSD、磁带等）">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">外部存储机构</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据存储）如数据存储外部，则填写外部存储机构名称">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">存储地点</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据存储）具体的数据存储位置，包括本地服务器、异地数据中心、云端存储区域等，以及是否涉及跨国存储">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">存储期限</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据存储）指数据存储的时间长度，包括数据的保存期限、过期删除策略等，确保数据在规定时间内有效存储">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">备份冗余策略</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据存储）指数据备份的方法和频率，包括全量备份、增量备份、差异备份等，以及冗余存储方案（如RAID、异地复制、多副本存储）以提高数据的可靠性和容灾能力">
+                                    <label class="form-label">是否进行数据质量管理</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="quality-yes">
+                                            <label for="quality-yes">是</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="quality-no">
+                                            <label for="quality-no">否</label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="table-section">
-                            <h3>数据传输</h3>
+                            <h3>数据传输情况</h3>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">在线通道</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据传输）包括互联网传输、虚拟专用网络（VPN）、物理专线（如光纤专线、租用线路）等">
+                                    <label class="form-label">数据传输的方式</label>
+                                    <input type="text" class="form-input" placeholder="请输入数据传输的方式">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">离线传输</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据传输）通过物理介质（如USB闪存盘、硬盘、光盘等）进行的数据传输">
+                                    <label class="form-label">数据传输的安全防护措施</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="trans-sec-conf">
+                                            <label for="trans-sec-conf">数据传输采取了机密性措施，密码技术，加密算法</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="trans-sec-int">
+                                            <label for="trans-sec-int">数据传输采取了完整性措施，密码技术，加密算法</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="trans-sec-enc">
+                                            <label for="trans-sec-enc">传输通道加密</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="trans-sec-auth">
+                                            <label for="trans-sec-auth">身份验证与授权</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="trans-sec-personal">
+                                            <label for="trans-sec-personal">个人信息传输安全措施</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="trans-sec-other">
+                                            <label for="trans-sec-other">其他：</label>
+                                            <input type="text" class="form-input" placeholder="请填写其他措施" style="width: 120px; padding: 4px 8px; font-size: 12px;">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">传输协议</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据传输）常用协议（如HTTP(S)、FTP(S)、SFTP、SMTP、IMAP、POP3等）和加密协议（如TLS/SSL、SSH等，用于保障数据传输的安全性）">
+                                    <label class="form-label">数据传输时的网络可用性</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="net-redun-link">
+                                            <label for="net-redun-link">网络传输链路冗余</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="net-redun-node">
+                                            <label for="net-redun-node">网络设备节点冗余</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="net-load">
+                                            <label for="net-load">负载均衡</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="net-anti-attack">
+                                            <label for="net-anti-attack">防入侵攻击</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="net-leak">
+                                            <label for="net-leak">数据防泄漏监测</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="net-other">
+                                            <label for="net-other">其他：</label>
+                                            <input type="text" class="form-input" placeholder="请填写其他选项" style="width: 120px; padding: 4px 8px; font-size: 12px;">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">数据接口</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据传输）API接口（包括RESTful API、SOAP服务等，用于不同系统之间的数据交互）、接口安全措施（如认证机制OAuth、JWT）、访问控制列表（ACL）、速率限制等，确保接口的安全性和稳定性">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>数据使用和加工</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">数据使用目的</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据使用）具体用途：明确数据使用的具体目的，如市场营销分析、客户关系管理、产品优化、内部管理决策等">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">数据使用方式</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据使用）指数据访问的具体方式，包括直接查询、批量导出、实时流处理等；分析工具：使用的数据分析工具和平台，如Tableau、Power BI、Python数据分析库等">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">数据使用范围</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据使用）具体说明哪些部门和人员有权访问和使用数据，以及各自的权限级别">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">应用场景</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据使用）列举数据在不同业务场景中的应用，如客户行为分析、风险管理、供应链优化等">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">算法规则</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据加工）使用何种算法模型进行数据处理和分析，如回归分析、聚类分析、深度学习模型等">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">数据加工情况</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据加工）数据清洗：去除重复数据、填补缺失值、纠正错误值等；数据转换：将原始数据转换成适合分析的格式，如数值转换、文本编码等；数据标注：对数据进行标记，用于训练机器学习模型等">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">应用算法推荐技术提供互联网信息服务情况</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据加工）应用算法推荐技术在互联网服务使用的方法">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">核心数据、重要数据或个人信息委托处理、共同处理情况</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据委托处理、共同处理）需明确第三方的资质、处理方式、安全措施、合作协议、数据共享机制等">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>数据提供</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">数据提供目的</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据提供）数据共享或交易的目的，如市场分析、客户洞察、联合营销等">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">数据提供方式</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据提供）具体的数据共享机制，如通过API接口、文件传输、数据同步等方式">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">数据提供范围</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据提供）数据类型：明确提供数据的具体类型，如个人信息、财务数据、运营数据、市场调研数据等；数据量：提供数据的数量，包括记录数、文件大小等；数据属性：描述提供的数据包含哪些具体属性或字段">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">数据接收方</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据提供）外部合作伙伴：接收数据的外部合作伙伴名单及其资质审核情况；内部部门：内部接收数据的部门及其使用目的；第三方机构：如政府机构、监管机构等接收数据的第三方机构">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">合同协议</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据提供）法律文件：涉及数据提供的相关合同或协议，包括数据共享协议、数据交易合同等；保密协议：签订的保密协议（NDA），确保数据在传输过程中的安全性；责任条款：合同中的责任分配条款，明确双方在数据使用过程中的责任和义务">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">对外提供的个人信息和重要数据</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及个人信息或重要数据提供）个人信息种类：提供给外部的个人信息种类，如姓名、身份证号、联系方式等；重要数据种类：提供给外部的重要数据种类，如财务报表、客户名单等；数据量：提供给外部的数据量；敏感程度；保存期限">
+                                    <label class="form-label">是否涉及个人信息传输</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="trans-personal-yes">
+                                            <label for="trans-personal-yes">是</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="trans-personal-no">
+                                            <label for="trans-personal-no">否</label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="table-section">
-                            <h3>数据公开</h3>
+                            <h3>数据存储情况</h3>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">数据公开目的</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据公开）业务需求：明确公开数据的具体业务需求，如市场透明度、公众知情权、品牌信任度提升等；法律合规：基于法律法规要求而进行的数据公开，如财务报告、环境影响评估等；社会责任：出于社会责任而主动公开的数据，如企业社会责任报告、可持续发展指标等">
+                                    <label class="form-label">数据存储位置</label>
+                                    <input type="text" class="form-input" placeholder="请输入数据存储位置">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">数据公开方式</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据公开）官方网站：通过公司官方网站发布公开数据；社交媒体：利用社交媒体平台（如微博、微信公众号等）公布数据；新闻媒体：通过新闻发布或媒体报道形式公布数据；数据门户：建立专门的数据公开门户或平台，集中展示公开数据；纸质报告：发布纸质版报告或公告">
+                                    <label class="form-label">数据存储形式</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="store-form-central">
+                                            <label for="store-form-central">集中存储</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="store-form-dist">
+                                            <label for="store-form-dist">分布式存储</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="store-form-class">
+                                            <label for="store-form-class">分类分级存储</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="store-form-other">
+                                            <label for="store-form-other">其他：</label>
+                                            <input type="text" class="form-input" placeholder="请填写其他形式" style="width: 120px; padding: 4px 8px; font-size: 12px;">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">对象范围</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据公开）公众：面向全体公众公开的数据，如年度报告、社会责任报告等；特定群体：针对特定群体公开的数据，如股东、客户、合作伙伴等；政府机构：向政府监管部门或相关部门公开的数据，如财务报表、环境监测数据等；行业协会：向行业协会或专业组织公开的数据，如行业标准、统计数据等">
+                                    <label class="form-label">数据存储安全防护措施</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="store-sec-conf">
+                                            <label for="store-sec-conf">采取了机密性措施，密码技术，加密算法</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="store-sec-int">
+                                            <label for="store-sec-int">采取了完整性措施，密码技术，加密算法</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="store-sec-audit">
+                                            <label for="store-sec-audit">日志审计</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="store-sec-access">
+                                            <label for="store-sec-access">访问控制</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="store-sec-desensitize">
+                                            <label for="store-sec-desensitize">脱敏/去标识化</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="store-sec-identity">
+                                            <label for="store-sec-identity">身份鉴别</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="store-sec-class">
+                                            <label for="store-sec-class">数据分类分级存储</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="store-sec-other">
+                                            <label for="store-sec-other">其他：</label>
+                                            <input type="text" class="form-input" placeholder="请填写其他措施" style="width: 120px; padding: 4px 8px; font-size: 12px;">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">受众数量</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据公开）广泛传播：面向大量受众公开的数据，如新闻发布后的媒体报道；特定受众：仅针对少数受众公开的数据，如定向发送的电子邮件；统计分析：分析受众数量，了解数据公开的实际覆盖范围">
+                                    <label class="form-label">数据备份容灾方式</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="backup-full">
+                                            <label for="backup-full">全量备份</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="backup-inc">
+                                            <label for="backup-inc">增量备份</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="backup-diff">
+                                            <label for="backup-diff">差异备份</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="backup-mirror">
+                                            <label for="backup-mirror">镜像备份</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="backup-real">
+                                            <label for="backup-real">实时备份</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="backup-period">
+                                            <label for="backup-period">定期备份</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="backup-redun">
+                                            <label for="backup-redun">冗余备份</label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">数据公开种类</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据公开）">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">数据公开规模</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据公开）">
+                                    <label class="form-label">数据备份归档的安全防护</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="backup-sec-access">
+                                            <label for="backup-sec-access">访问控制</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="backup-sec-compress">
+                                            <label for="backup-sec-compress">压缩或加密管理</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="backup-sec-integrity">
+                                            <label for="backup-sec-integrity">完整性和可用性管理</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="backup-sec-delete">
+                                            <label for="backup-sec-delete">过期备份数据的彻底删除</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="backup-sec-avoid">
+                                            <label for="backup-sec-avoid">避免非过期数据误删</label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="table-section">
-                            <h3>数据删除</h3>
+                            <h3>数据使用和加工情况</h3>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">数据删除情形</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据删除）法律要求：根据法律法规的要求删除数据，例如《中华人民共和国个人信息保护法》中规定的删除请求权；业务需求：根据业务需求定期或不定期删除不再需要的数据，如过期的客户订单信息、历史日志等；安全考虑：为防止数据泄露或滥用而主动删除敏感数据；存储优化：为了优化存储空间，删除冗余或重复的数据；用户请求：根据用户请求删除其个人信息，保障用户的数据隐私权；合同终止：在合同终止后删除与该合同相关的数据；业务调整：因业务调整或系统升级需要删除旧数据">
+                                    <label class="form-label">数据使用的场景</label>
+                                    <input type="text" class="form-input" placeholder="请输入数据使用的场景">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">数据使用的用途</label>
+                                    <input type="text" class="form-input" placeholder="请输入数据使用的用途">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">删除方式</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据删除）逻辑删除：在数据库中设置标志位表示数据已删除，但仍保留数据以备将来恢复或审计；物理删除：彻底删除数据，使其不可恢复，包括使用专用软件进行擦除；安全擦除：使用专业工具或技术彻底擦除存储介质上的数据，确保数据无法恢复">
+                                    <label class="form-label">数据使用的规模</label>
+                                    <input type="text" class="form-input" placeholder="请输入数据使用的规模">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">数据加工方式</label>
+                                    <input type="text" class="form-input" placeholder="请输入数据加工方式">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">数据归档</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据归档）描述归档的情况">
+                                    <label class="form-label">数据加工位置</label>
+                                    <input type="text" class="form-input" placeholder="请输入数据加工位置">
                                 </div>
-                            </div>
-                            <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">介质销毁</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据删除）物理销毁：通过物理手段销毁存储介质，如粉碎硬盘、消磁等；化学销毁：使用化学试剂破坏存储介质上的数据；热销毁：通过高温焚烧等方法彻底销毁存储介质">
+                                    <label class="form-label">数据加工目的</label>
+                                    <input type="text" class="form-input" placeholder="请输入数据加工目的">
                                 </div>
                             </div>
                         </div>
 
                         <div class="table-section">
-                            <h3>数据出境</h3>
+                            <h3>数据提供情况</h3>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">是否存在个人信息或重要数据出境</label>
-                                    <input type="text" class="form-input" placeholder="（如涉及数据出境）如跨境业务、跨境办公、境外上市、使用境外云服务或数据中心、国际交流合作等场景的数据出境情况">
+                                    <label class="form-label">数据提供审核机制</label>
+                                    <input type="text" class="form-input" placeholder="请输入数据提供审核机制">
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label class="form-label">数据出境情况说明</label>
-                                    <input type="text" class="form-input" placeholder="请输入数据出境的具体情况，如跨境业务、跨境办公、境外上市、使用境外云服务或数据中心、国际交流合作等">
+                                    <label class="form-label">数据提供的安全防护措施</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="provide-sec-enc">
+                                            <label for="provide-sec-enc">数据加密</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="provide-sec-des">
+                                            <label for="provide-sec-des">数据脱敏</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="provide-sec-water">
+                                            <label for="provide-sec-water">数据水印</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="provide-sec-other">
+                                            <label for="provide-sec-other">其他：</label>
+                                            <input type="text" class="form-input" placeholder="请填写其他措施" style="width: 120px; padding: 4px 8px; font-size: 12px;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">是否有对外提供的数据</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="provide-ext-yes">
+                                            <label for="provide-ext-yes">是</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="provide-ext-no">
+                                            <label for="provide-ext-no">否</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">是否有对外部提供数据的收费情况</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="provide-fee-yes">
+                                            <label for="provide-fee-yes">是</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="provide-fee-no">
+                                            <label for="provide-fee-no">否</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">是否有对本公司和供应商的合规审查情况</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="provide-compliance-yes">
+                                            <label for="provide-compliance-yes">是</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="provide-compliance-no">
+                                            <label for="provide-compliance-no">否</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-section">
+                            <h3>数据公开情况</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">数据公开的目的</label>
+                                    <input type="text" class="form-input" placeholder="请输入数据公开的目的">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">数据公开的方式</label>
+                                    <input type="text" class="form-input" placeholder="请输入数据公开的方式">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">数据公开的对象范围</label>
+                                    <input type="text" class="form-input" placeholder="请输入数据公开的对象范围">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">数据规模</label>
+                                    <input type="text" class="form-input" placeholder="请输入数据规模">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-section">
+                            <h3>数据删除情况</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">是否有数据销毁管理规范</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="delete-spec-yes">
+                                            <label for="delete-spec-yes">是</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="delete-spec-no">
+                                            <label for="delete-spec-no">否</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">是否有数据销毁</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="delete-dest-yes">
+                                            <label for="delete-dest-yes">是</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="delete-dest-no">
+                                            <label for="delete-dest-no">否</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">效果验证机制数据销毁技术</label>
+                                    <div class="checkbox-group">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="delete-tech-physical">
+                                            <label for="delete-tech-physical">物理粉碎</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="delete-tech-demag">
+                                            <label for="delete-tech-demag">消磁</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="delete-tech-wipe">
+                                            <label for="delete-tech-wipe">多次擦写</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="delete-tech-other">
+                                            <label for="delete-tech-other">其他：</label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2104,187 +2245,536 @@
                     </div>
 
                     <div class="tab-content" id="protection-tab">
-                        <div class="table-section">
-                            <h3>1. 等级保护测评、商用密码应用安全性评估等</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <textarea class="form-input" placeholder="请输入已开展的等级保护测评、商用密码应用安全性评估、安全检测、风险评估、安全认证、合规审计情况，及发现问题的整改情况" style="width: 100%; min-height: 80px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>2. 数据安全管理组织、人员及制度情况</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <textarea class="form-input" placeholder="请输入数据安全管理组织、人员及制度情况" style="width: 100%; min-height: 80px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>3. 防火墙、入侵检测、入侵防御等网络安全设备及策略情况</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <textarea class="form-input" placeholder="请输入防火墙、入侵检测、入侵防御等网络安全设备及策略情况" style="width: 100%; min-height: 80px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>4. 身份鉴别与访问控制情况</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <textarea class="form-input" placeholder="请输入身份鉴别与访问控制情况" style="width: 100%; min-height: 80px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>5. 网络安全漏洞管理及修复情况</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <textarea class="form-input" placeholder="请输入网络安全漏洞管理及修复情况" style="width: 100%; min-height: 80px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>6. VPN等远程管理软件的用户及管理情况</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <textarea class="form-input" placeholder="请输入VPN等远程管理软件的用户及管理情况" style="width: 100%; min-height: 80px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>7. 设备、系统及用户的账号口令管理情况</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <textarea class="form-input" placeholder="请输入设备、系统及用户的账号口令管理情况" style="width: 100%; min-height: 80px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>8. 加密、脱敏、去标识化等安全技术应用情况</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <textarea class="form-input" placeholder="请输入加密、脱敏、去标识化等安全技术应用情况" style="width: 100%; min-height: 80px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="table-section">
-                            <h3>9. 电力监控系统防护措施要点<span style="color: #999; font-size: 12px; font-weight: 400; margin-left: 8px;">如评估对象是电力监控系统，需填写以下内容</span></h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">是否为电力监控系统</label>
-                                    <div class="checkbox-group">
-                                        <div class="checkbox-item">
-                                            <input type="checkbox" id="power-yes">
-                                            <label for="power-yes">是</label>
-                                        </div>
-                                        <div class="checkbox-item">
-                                            <input type="checkbox" id="power-no">
-                                            <label for="power-no">否</label>
-                                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">1. 是否开展等级保护测评</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey1-yes">
+                                        <label for="survey1-yes">是（级别：</label>
+                                        <input type="text" class="form-input" placeholder="请填写级别" value="3" style="width: 80px; padding: 4px 8px; font-size: 12px;">
+                                        <label>级）</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey1-no">
+                                        <label for="survey1-no">否</label>
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">生产控制区和管理信息区的设置和防护情况</label>
-                                    <textarea class="form-input" placeholder="请输入生产控制区和管理信息区的设置和防护情况" style="width: 100%; min-height: 60px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">安全接入区的设立情况</label>
-                                    <textarea class="form-input" placeholder="请输入安全接入区的设立情况" style="width: 100%; min-height: 60px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">电力监控专用网络的使用情况</label>
-                                    <textarea class="form-input" placeholder="请输入电力监控专用网络的使用情况" style="width: 100%; min-height: 60px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">生产控制区与管理信息区、安全接入区的隔离及隔离装置使用情况</label>
-                                    <textarea class="form-input" placeholder="请输入生产控制区与管理信息区、安全接入区的隔离及隔离装置使用情况" style="width: 100%; min-height: 60px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">生产控制区与电力监控专用网络的广域网之间的联接安全方案</label>
-                                    <textarea class="form-input" placeholder="请输入生产控制区与电力监控专用网络的广域网之间的联接安全方案" style="width: 100%; min-height: 60px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">电力调度认证机制建设情况</label>
-                                    <textarea class="form-input" placeholder="请输入电力调度认证机制建设情况" style="width: 100%; min-height: 60px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">网络服务的安全管控情况</label>
-                                    <textarea class="form-input" placeholder="请输入网络服务的安全管控情况" style="width: 100%; min-height: 60px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">安全接入区的安全管控情况</label>
-                                    <textarea class="form-input" placeholder="请输入安全接入区的安全管控情况" style="width: 100%; min-height: 60px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">电力监控系统分区边界的安全防护情况</label>
-                                    <textarea class="form-input" placeholder="请输入电力监控系统分区边界的安全防护情况" style="width: 100%; min-height: 60px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">系统使用的产品安全可靠情况</label>
-                                    <textarea class="form-input" placeholder="请输入系统使用的产品安全可靠情况" style="width: 100%; min-height: 60px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">运营者的网络安全检测预警机制建设情况</label>
-                                    <textarea class="form-input" placeholder="请输入运营者的网络安全检测预警机制建设情况" style="width: 100%; min-height: 60px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">2. 是否开展商用密码应用安全性评估</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey2-yes">
+                                        <label for="survey2-yes">是</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey2-no">
+                                        <label for="survey2-no">否</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="table-section">
-                            <h3>10. 3年内发生的网络和数据安全事件、攻击威胁情况</h3>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">3年内发生的网络和数据安全事件、攻击威胁情况<span style="color: #999; font-size: 12px; font-weight: 400; margin-left: 8px;">包括事件名称、数据类型和数量、发生原因、级别、处置措施、整改措施等，重大事件需提供事件调查评估报告</span></label>
-                                    <textarea class="form-input" placeholder="请输入3年内发生的网络和数据安全事件、攻击威胁情况，包括事件名称、数据类型和数量、发生原因、级别、处置措施、整改措施等" style="width: 100%; min-height: 80px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">3. 近3年是否进行安全检测/风险评估</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey3-yes">
+                                        <label for="survey3-yes">是（次数：</label>
+                                        <input type="text" class="form-input" placeholder="请填写次数" style="width: 80px; padding: 4px 8px; font-size: 12px;">
+                                        <label>）</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey3-no">
+                                        <label for="survey3-no">否</label>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">实际环境中通过检测工具、监测系统、日志审计等发现的威胁</label>
-                                    <textarea class="form-input" placeholder="请输入实际环境中通过检测工具、监测系统、日志审计等发现的威胁" style="width: 100%; min-height: 60px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">4. 历史测评中发现的问题是否100%整改</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey4-yes">
+                                        <label for="survey4-yes">是</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey4-no">
+                                        <label for="survey4-no">否（未整改问题说明：</label>
+                                        <input type="text" class="form-input" placeholder="请填写未整改问题说明" style="width: 150px; padding: 4px 8px; font-size: 12px;">
+                                        <label>）</label>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">近期公开发布的社会或特定行业威胁事件、威胁预警</label>
-                                    <textarea class="form-input" placeholder="请输入近期公开发布的社会或特定行业威胁事件、威胁预警" style="width: 100%; min-height: 60px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">5. 是否设立专职数据安全管理组织</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey5-yes">
+                                        <label for="survey5-yes">是（部门名称：</label>
+                                        <input type="text" class="form-input" placeholder="请填写部门名称" style="width: 120px; padding: 4px 8px; font-size: 12px;">
+                                        <label>）</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey5-no">
+                                        <label for="survey5-no">否</label>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">其他可能面临的安全威胁<span style="color: #999; font-size: 12px; font-weight: 400; margin-left: 8px;">如数据泄露、窃取、篡改、破坏/损毁、丢失、滥用、非法获取、非法利用、非法提供等安全威胁</span></label>
-                                    <textarea class="form-input" placeholder="请输入其他可能面临的数据泄露、窃取、篡改、破坏/损毁、丢失、滥用、非法获取、非法利用、非法提供等安全威胁" style="width: 100%; min-height: 60px; resize: vertical; padding: 8px 12px; font-size: 13px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">6. 是否任命数据安全负责人</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey6-yes">
+                                        <label for="survey6-yes">是（姓名：</label>
+                                        <input type="text" class="form-input" placeholder="请填写姓名" style="width: 100px; padding: 4px 8px; font-size: 12px;">
+                                        <label>）</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey6-no">
+                                        <label for="survey6-no">否</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">7. 是否部署安全设备（多选）</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey7-firewall">
+                                        <label for="survey7-firewall">防火墙</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey7-ids">
+                                        <label for="survey7-ids">入侵检测系统（IDS）</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey7-ips">
+                                        <label for="survey7-ips">入侵防御系统（IPS）</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey7-waf">
+                                        <label for="survey7-waf">WAF</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey7-apt">
+                                        <label for="survey7-apt">APT防护</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey7-other">
+                                        <label for="survey7-other">其他：</label>
+                                        <input type="text" class="form-input" placeholder="请填写其他设备" style="width: 120px; padding: 4px 8px; font-size: 12px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">8. 安全策略更新频率</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey8-real">
+                                        <label for="survey8-real">实时</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey8-daily">
+                                        <label for="survey8-daily">每日</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey8-weekly">
+                                        <label for="survey8-weekly">每周</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey8-monthly">
+                                        <label for="survey8-monthly">每月</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey8-irregular">
+                                        <label for="survey8-irregular">不定期</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">9. 身份鉴别措施</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey9-pwd">
+                                        <label for="survey9-pwd">口令</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey9-finger">
+                                        <label for="survey9-finger">指纹</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey9-face">
+                                        <label for="survey9-face">人脸</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey9-ukey">
+                                        <label for="survey9-ukey">U-Key</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey9-cert">
+                                        <label for="survey9-cert">证书</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">10. 是否实行最小权限原则</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey10-yes">
+                                        <label for="survey10-yes">是（基于角色授权）</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey10-partial">
+                                        <label for="survey10-partial">部分</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey10-no">
+                                        <label for="survey10-no">否</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">11. 漏洞扫描频率</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey11-daily">
+                                        <label for="survey11-daily">每日</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey11-weekly">
+                                        <label for="survey11-weekly">每周</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey11-monthly">
+                                        <label for="survey11-monthly">每月</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey11-quarterly">
+                                        <label for="survey11-quarterly">每季度</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey11-irregular">
+                                        <label for="survey11-irregular">不定期</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey11-never">
+                                        <label for="survey11-never">从未</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">12. 高危漏洞修复周期</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey12-24h">
+                                        <label for="survey12-24h">24小时内</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey12-3d">
+                                        <label for="survey12-3d">3天内</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey12-7d">
+                                        <label for="survey12-7d">7天内</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey12-over7d">
+                                        <label for="survey12-over7d">超过7天</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">13. 使用的远程管理工具</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey13-vpn">
+                                        <label for="survey13-vpn">VPN</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey13-bastion">
+                                        <label for="survey13-bastion">堡垒机</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey13-rdp">
+                                        <label for="survey13-rdp">远程桌面</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey13-other">
+                                        <label for="survey13-other">其他：</label>
+                                        <input type="text" class="form-input" placeholder="请填写其他工具" style="width: 120px; padding: 4px 8px; font-size: 12px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">14. 远程访问权限分配对象</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey14-ops">
+                                        <label for="survey14-ops">运维人员</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey14-dev">
+                                        <label for="survey14-dev">开发人员</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey14-mgmt">
+                                        <label for="survey14-mgmt">管理层</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey14-outsourcing">
+                                        <label for="survey14-outsourcing">外包人员</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey14-other">
+                                        <label for="survey14-other">其他：</label>
+                                        <input type="text" class="form-input" placeholder="请填写其他对象" style="width: 120px; padding: 4px 8px; font-size: 12px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">15. 系统口令复杂度要求</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey15-length">
+                                        <label for="survey15-length">长度≥8位</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey15-complex">
+                                        <label for="survey15-complex">含大小写+数字+符号</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey15-change">
+                                        <label for="survey15-change">定期更换（周期：</label>
+                                        <input type="text" class="form-input" placeholder="请填写天数" value="90" style="width: 60px; padding: 4px 8px; font-size: 12px;">
+                                        <label>天）</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">16. 传输加密情况</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey16-ssl">
+                                        <label for="survey16-ssl">SSL/TLS</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey16-ipsec">
+                                        <label for="survey16-ipsec">IPSec</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey16-other">
+                                        <label for="survey16-other">其他</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">17. 存储加密情况</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey17-db">
+                                        <label for="survey17-db">数据库加密</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey17-file">
+                                        <label for="survey17-file">文件加密</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey17-disk">
+                                        <label for="survey17-disk">磁盘加密</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey17-none">
+                                        <label for="survey17-none">未加密</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">18. 脱敏、去标识化情况</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey18-static">
+                                        <label for="survey18-static">静态</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey18-dynamic">
+                                        <label for="survey18-dynamic">动态</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey18-none">
+                                        <label for="survey18-none">无</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">19. 近1年检测到的威胁类型</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey19-malware">
+                                        <label for="survey19-malware">恶意软件</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey19-bruteforce">
+                                        <label for="survey19-bruteforce">暴力破解</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey19-phishing">
+                                        <label for="survey19-phishing">钓鱼攻击</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey19-ddos">
+                                        <label for="survey19-ddos">DDoS</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey19-leak">
+                                        <label for="survey19-leak">数据泄露</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey19-other">
+                                        <label for="survey19-other">其他：</label>
+                                        <input type="text" class="form-input" placeholder="请填写其他威胁类型" style="width: 120px; padding: 4px 8px; font-size: 12px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">20. 是否发生过数据安全事件</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey20-none">
+                                        <label for="survey20-none">无</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey20-once">
+                                        <label for="survey20-once">1次/年</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey20-twice">
+                                        <label for="survey20-twice">2次/年</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey20-thrice">
+                                        <label for="survey20-thrice">3次以上/年</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">21. 发生的数据安全事件类型（多选）</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey21-none">
+                                        <label for="survey21-none">无</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey21-leak">
+                                        <label for="survey21-leak">数据泄露</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey21-tamper">
+                                        <label for="survey21-tamper">数据篡改</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey21-damage">
+                                        <label for="survey21-damage">数据损毁</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey21-lost">
+                                        <label for="survey21-lost">数据丢失</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey21-abuse">
+                                        <label for="survey21-abuse">数据滥用</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey21-trade">
+                                        <label for="survey21-trade">非法数据交易</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey21-supply">
+                                        <label for="survey21-supply">供应链导致的数据泄露</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey21-cloud">
+                                        <label for="survey21-cloud">云存储配置错误致数据暴露</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey21-other">
+                                        <label for="survey21-other">其他：</label>
+                                        <input type="text" class="form-input" placeholder="请填写其他事件类型" style="width: 120px; padding: 4px 8px; font-size: 12px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">22. 事件详情描述</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey22-none">
+                                        <label for="survey22-none">无数据安全事件</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="survey22-desc">
+                                        <label for="survey22-desc">事件描述：</label>
+                                        <input type="text" class="form-input" placeholder="请填写事件描述" style="width: 200px; padding: 4px 8px; font-size: 12px;">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2583,6 +3073,40 @@
                 displaySpan.textContent = '未选择文件';
                 displaySpan.style.color = '#64748b';
             }
+        }
+
+        function addAssetRow(btn) {
+            var tableSection = btn.closest('.table-section');
+            var tbody = tableSection.querySelector('tbody');
+            var firstRow = tbody.querySelector('tr');
+            if (!firstRow) return;
+            var colCount = firstRow.querySelectorAll('td').length;
+            var newRow = document.createElement('tr');
+            for (var i = 0; i < colCount - 1; i++) {
+                var td = document.createElement('td');
+                var input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'form-input';
+                input.placeholder = '';
+                input.style.cssText = 'padding: 4px 8px; font-size: 12px;';
+                td.appendChild(input);
+                newRow.appendChild(td);
+            }
+            var opTd = document.createElement('td');
+            opTd.className = 'td-operations';
+            opTd.innerHTML = '<button type="button" class="btn-del-row" onclick="deleteAssetRow(this)"><i class="fas fa-trash-alt"></i> 删除</button>';
+            newRow.appendChild(opTd);
+            tbody.appendChild(newRow);
+        }
+
+        function deleteAssetRow(btn) {
+            var row = btn.closest('tr');
+            var tbody = row.parentElement;
+            if (tbody.querySelectorAll('tr').length <= 1) {
+                alert('至少保留一行数据');
+                return;
+            }
+            row.remove();
         }
 
     </script>

@@ -1,10 +1,13 @@
 import logging
+from io import BytesIO
 
-from flask import Blueprint
+from flask import Blueprint, request, send_file
 
 from app.common.response import success
 from app.common.utils import request_json
+from app.services import file_service
 from app.services import harm_analysis_service
+from app.services import risk_excel_service
 from app.services import risk_service
 
 
@@ -29,6 +32,25 @@ def list_risk_sources(project_id: str):
     return success(risk_service.list_risk_sources(project_id))
 
 
+@bp.get("/projects/<project_id>/risk-sources/export")
+def export_risk_sources(project_id: str):
+    """导出当前项目下全部风险源清单。"""
+    logger.info("收到导出风险源清单请求。project_id=%s", project_id)
+    return _send_generated_workbook(
+        project_id,
+        risk_excel_service.export_risk_sources_workbook(project_id),
+        "RISK_SOURCES_EXPORT",
+    )
+
+
+@bp.post("/projects/<project_id>/risk-sources/import")
+def import_risk_sources(project_id: str):
+    """导入风险源清单可人工调整字段。"""
+    uploaded = request.files.get("file") or next(iter(request.files.values()), None)
+    logger.info("收到导入风险源清单请求。project_id=%s file_name=%s", project_id, getattr(uploaded, "filename", None))
+    return success(risk_excel_service.import_risk_sources_workbook(project_id, uploaded))
+
+
 @bp.put("/projects/<project_id>/risk-sources/<risk_source_id>")
 def update_risk_source(project_id: str, risk_source_id: str):
     """修改风险源清单中允许人工编辑的字段。"""
@@ -49,6 +71,25 @@ def list_risk_items(project_id: str):
     logger.info("收到查询数据安全风险清单请求。project_id=%s", project_id)
     # 返回正式风险清单字段，同时带出危害程度建议确认后的闭环字段。
     return success(risk_service.list_risk_items(project_id))
+
+
+@bp.get("/projects/<project_id>/risk-items/export")
+def export_risk_items(project_id: str):
+    """导出当前项目下全部数据安全风险清单。"""
+    logger.info("收到导出数据安全风险清单请求。project_id=%s", project_id)
+    return _send_generated_workbook(
+        project_id,
+        risk_excel_service.export_risk_items_workbook(project_id),
+        "RISK_ITEMS_EXPORT",
+    )
+
+
+@bp.post("/projects/<project_id>/risk-items/import")
+def import_risk_items(project_id: str):
+    """导入数据安全风险清单可人工调整字段，并按矩阵重算风险等级。"""
+    uploaded = request.files.get("file") or next(iter(request.files.values()), None)
+    logger.info("收到导入数据安全风险清单请求。project_id=%s file_name=%s", project_id, getattr(uploaded, "filename", None))
+    return success(risk_excel_service.import_risk_items_workbook(project_id, uploaded))
 
 
 @bp.put("/projects/<project_id>/risk-items/<risk_item_id>")
@@ -127,3 +168,9 @@ def update_risk_suggestion(project_id: str, suggestion_id: str):
     )
     # 仅允许修改处置建议文本，风险描述和风险等级保持汇总分析的正式字段。
     return success(risk_service.update_risk_suggestion(project_id, suggestion_id, payload))
+
+
+def _send_generated_workbook(project_id: str, generated: tuple[str, bytes, str], biz_type: str):
+    file_name, content, content_type = generated
+    file_service.save_bytes(file_name, content, content_type, biz_type=biz_type, project_id=project_id)
+    return send_file(BytesIO(content), as_attachment=True, download_name=file_name, mimetype=content_type)

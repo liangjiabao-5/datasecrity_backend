@@ -11,6 +11,7 @@ from app.extensions import SessionLocal
 from app.models import (
     AssessmentTeamMember,
     BusinessSystem,
+    DataProcessorBasicSurvey,
     EvaluationRecord,
     FileObject,
     ProjectAssessmentItem,
@@ -47,6 +48,10 @@ def list_reports(project_id: str) -> dict:
 
 
 def report_readiness(project_id: str) -> dict:
+    """检查报告生成前置条件。
+
+    blockers 会阻止创建任务；warnings 仅提示数据不完整，用户确认后仍可生成报告。
+    """
     project = get_project(project_id)
     session = SessionLocal()
     blockers = []
@@ -58,6 +63,8 @@ def report_readiness(project_id: str) -> dict:
         warnings.append({"code": "BASIC_INFO_EMPTY", "message": "项目基本信息未填写，报告相应位置将使用缺省文本。"})
     if not session.query(AssessmentTeamMember).filter_by(project_id=project_id, deleted=False).first():
         warnings.append({"code": "ASSESSMENT_TEAM_EMPTY", "message": "评估团队未填写，报告团队表将使用缺省行。"})
+    if not session.query(DataProcessorBasicSurvey).filter_by(project_id=project_id, deleted=False).first():
+        warnings.append({"code": "DATA_PROCESSOR_BASIC_EMPTY", "message": "数据处理者基本情况调研未填写，报告相应位置将使用缺省文本。"})
     if not session.query(BusinessSystem).filter_by(project_id=project_id, deleted=False).first():
         warnings.append({"code": "SURVEY_SYSTEM_EMPTY", "message": "业务和信息系统调研未填写，报告相应位置将使用缺省文本。"})
     if not session.query(ProjectAssessmentItem).filter_by(project_id=project_id, deleted=False).first():
@@ -79,7 +86,16 @@ def report_readiness(project_id: str) -> dict:
 
 
 def generate_report(project_id: str, payload: dict) -> dict:
+    """创建报告记录和报告任务，并将实际生成工作交给任务执行器。
+
+    流程：
+    1. 检查模板等阻断条件。
+    2. 校验报告名称、类型和选定章节。
+    3. 以 PENDING 状态创建 ReportRecord 和 ReportTask。
+    4. 提交后台任务，立即向前端返回任务 ID 和轮询地址。
+    """
     project = get_project(project_id)
+    # 生成接口再次执行就绪检查，避免前端跳过 readiness 接口直接提交非法任务。
     readiness = report_readiness(project_id)
     if readiness["blockers"]:
         blocker = readiness["blockers"][0]
@@ -99,6 +115,7 @@ def generate_report(project_id: str, payload: dict) -> dict:
         raise BusinessError("INVALID_REPORT_SECTIONS", "Selected report sections are invalid.")
     sections = list(dict.fromkeys(sections))
 
+    # 报告记录描述最终文件，任务记录描述本次执行过程；失败重试会复用报告并创建新任务。
     session = SessionLocal()
     creator = getattr(g, "current_user_id", "system")
     report = ReportRecord(
@@ -126,11 +143,14 @@ def generate_report(project_id: str, payload: dict) -> dict:
         after={"reportId": report.id, "reportTaskId": task.id, "selectedSections": sections},
     )
     session.commit()
+
+    # 先提交 PENDING 状态，再启动任务，确保前端轮询时一定能查到报告和任务记录。
     _enqueue_report_task(project_id, report.id, task.id)
     return _task_response(project_id, report.id, task.id, readiness["warnings"])
 
 
 def retry_report(project_id: str, report_id: str) -> dict:
+    """为失败报告创建新的生成任务，保留原报告记录和失败审计轨迹。"""
     get_project(project_id)
     session = SessionLocal()
     report = _get_report(session, project_id, report_id)
@@ -147,9 +167,16 @@ def retry_report(project_id: str, report_id: str) -> dict:
 
 
 def execute_report_task(project_id: str, report_id: str, task_id: str) -> None:
+    """执行报告生成任务并负责完整状态回写。
+
+    成功路径：RUNNING -> 渲染 Word -> 保存文件 -> SUCCESS。
+    失败路径：捕获异常 -> 回滚当前事务 -> FAILED，并保存错误摘要供前端展示。
+    """
     session = SessionLocal()
     report = _get_report(session, project_id, report_id)
     task = _get_task(session, project_id, task_id)
+
+    # RUNNING 状态先独立提交，使前端能及时看到任务已被执行器领取。
     report.status = "RUNNING"
     report.error_message = None
     task.status = "RUNNING"
@@ -158,12 +185,16 @@ def execute_report_task(project_id: str, report_id: str, task_id: str) -> None:
 
     try:
         project = get_project(project_id)
+
+        # 从正式模板和项目最终数据生成完整 docx 字节，不在渲染阶段写入文件存储。
         content = docx_report_service.generate_document(
             session,
             project,
             current_app.config["REPORT_TEMPLATE_PATH"],
             report.selected_sections,
         )
+
+        # REPORT 类型优先写入 MinIO；未配置 MinIO 时由 file_service 回退到本地目录。
         file_info = file_service.save_bytes(
             f"{_safe_file_stem(report.report_name)}_{report.id}.docx",
             content,
@@ -171,6 +202,8 @@ def execute_report_task(project_id: str, report_id: str, task_id: str) -> None:
             biz_type="REPORT",
             project_id=project_id,
         )
+
+        # 文件保存成功后再将报告和任务一起更新为 SUCCESS，避免成功状态指向不存在的文件。
         result = {
             "reportId": report.id,
             "fileId": file_info["fileId"],
@@ -184,6 +217,7 @@ def execute_report_task(project_id: str, report_id: str, task_id: str) -> None:
         audit("REPORT_GENERATE_SUCCESS", "ReportRecord", report.id, after=result)
         session.commit()
     except Exception as exc:
+        # 渲染或存储任一步失败都统一落为 FAILED，错误摘要可通过任务和报告列表查询。
         session.rollback()
         report = _get_report(session, project_id, report_id)
         task = _get_task(session, project_id, task_id)
@@ -233,6 +267,7 @@ def delete_report(project_id: str, report_id: str) -> dict:
 
 
 def _enqueue_report_task(project_id: str, report_id: str, task_id: str) -> None:
+    """把已落库的 PENDING 任务交给当前后台任务执行器。"""
     from app.tasks.report_tasks import enqueue
 
     enqueue(project_id, report_id, task_id)

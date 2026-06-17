@@ -2,10 +2,22 @@ from io import BytesIO
 from xml.etree import ElementTree as ET
 import zipfile
 
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
 
 from app.extensions import SessionLocal
-from app.models import EvaluationRecord
+from app.models import (
+    AssessedOrganization,
+    AssessmentTeamMember,
+    BusinessSystem,
+    ClientTeamMember,
+    DataProcessorBasicSurvey,
+    EvaluationRecord,
+    FocusPoint,
+    GapItem,
+    ProcessingActivitySurvey,
+    ProjectBasicInfo,
+    SecurityProtectionSurvey,
+)
 
 
 def unwrap(response):
@@ -31,6 +43,13 @@ def create_project(client, score_model_id="score-v1", project_code="ENST-TEST-00
             },
         )
     )["projectId"]
+
+
+def workbook_stream(workbook):
+    stream = BytesIO()
+    workbook.save(stream)
+    stream.seek(0)
+    return stream
 
 
 def test_project_create_start_and_list(client):
@@ -228,18 +247,31 @@ def test_basic_plan_survey_evaluation_and_risk_flow(client):
         client.put(
             f"/api/v1/projects/{project_id}/basic-info",
             json={
-                "projectDescription": "desc",
-                "systemDescription": "system",
+                "projectNumber": "SHOULD-NOT-CHANGE",
+                "projectName": "新版项目名称",
                 "laws": [{"id": "law-1", "name": "law"}],
                 "standards": [{"id": "std-1", "name": "std"}],
                 "assessmentPlan": {"startDate": "2026-06-01", "endDate": "2026-06-30"},
-                "assessmentTarget": "target",
-                "organization": {"name": "org"},
+                "organization": {"name": "org", "postalCode": "100000"},
                 "contacts": [{"name": "alice", "email": "alice@example.com"}],
             },
         )
     )
+    assert basic["projectNumber"] == "ENST-TEST-001"
+    assert basic["projectName"] == "新版项目名称"
     assert basic["organization"]["name"] == "org"
+    assert basic["organization"]["postalCode"] == "100000"
+    assert "projectDescription" not in basic
+    assert "systemDescription" not in basic
+    assert "assessmentTarget" not in basic
+    assert "creditCode" not in basic["organization"]
+    assert "project_description" not in ProjectBasicInfo.__table__.columns
+    assert "system_description" not in ProjectBasicInfo.__table__.columns
+    assert "assessment_target" not in ProjectBasicInfo.__table__.columns
+    assert "address" not in AssessedOrganization.__table__.columns
+    assert "credit_code" not in AssessedOrganization.__table__.columns
+    assert "data_security_owner" not in AssessedOrganization.__table__.columns
+    assert "description" not in AssessedOrganization.__table__.columns
 
     team = unwrap(
         client.post(
@@ -273,32 +305,107 @@ def test_basic_plan_survey_evaluation_and_risk_flow(client):
     assert personal["dataName"] == "用户手机号"
     assert personal["businessFlow"] == "注册后进入客户管理系统"
 
+    processor_basic = unwrap(
+        client.put(
+            f"/api/v1/projects/{project_id}/survey/data-processor-basic",
+            json={
+                "unitName": "数据处理者",
+                "unitNature": "企业",
+                "unifiedSocialCreditCode": "91330000000000000X",
+                "businessScope": "电力业务",
+                "isIgnoredByBackend": "ignored",
+            },
+        )
+    )
+    assert processor_basic["unitName"] == "数据处理者"
+    assert processor_basic["unitNature"] == "企业"
+    assert "isIgnoredByBackend" not in processor_basic
+    assert unwrap(client.get(f"/api/v1/projects/{project_id}/survey/data-processor-basic"))["businessScope"] == "电力业务"
+    session = SessionLocal()
+    processor_basic_row = session.query(DataProcessorBasicSurvey).filter_by(project_id=project_id).one()
+    assert "payload" not in DataProcessorBasicSurvey.__table__.columns
+    assert processor_basic_row.unit_name == "数据处理者"
+    assert processor_basic_row.business_scope == "电力业务"
+
+    business_system = unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/survey/business-systems",
+            json={
+                "systemName": "核心业务系统",
+                "businessFunction": "业务办理",
+                "dataScopes": ["一般数据", "个人信息", "重要数据"],
+            },
+        )
+    )
+    assert business_system["dataScopes"] == ["一般数据", "个人信息", "重要数据"]
+    business_system_row = session.query(BusinessSystem).filter_by(id=business_system["id"]).one()
+    assert business_system_row.data_scopes == "一般数据、个人信息、重要数据"
+
     activity_survey_default = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/processing-activity-survey"))
-    assert activity_survey_default["activityTypes"] == []
+    assert activity_survey_default["involvedActivities"] == []
+    assert activity_survey_default["collectionChannels"] == ""
     activity_survey = unwrap(
         client.put(
             f"/api/v1/projects/{project_id}/survey/processing-activity-survey",
             json={
-                "activityTypes": ["COLLECT", "TRANSFER"],
-                "collect": {"scenarios": ["线上采集"], "methods": ["接口采集"]},
-                "transfer": {"securityMeasures": ["传输通道加密"]},
+                "involvedActivities": ["COLLECT", "TRANSFER"],
+                "collectionChannels": "线上渠道",
+                "collectionMethod": "接口采集",
+                "transferProtocol": "HTTPS",
+                "storageMethod": "不应保存",
+                "collect": {"scenarios": ["旧字段不应返回"]},
             },
         )
     )
-    assert activity_survey["collect"]["methods"] == ["接口采集"]
+    assert activity_survey["involvedActivities"] == ["COLLECT", "TRANSFER"]
+    assert "activityTypes" not in activity_survey
+    assert "collect" not in activity_survey
+    assert activity_survey["collectionChannels"] == "线上渠道"
+    assert activity_survey["collectionMethod"] == "接口采集"
+    assert activity_survey["transferProtocol"] == "HTTPS"
+    assert activity_survey["storageMethod"] == "不应保存"
+    activity_survey_row = session.query(ProcessingActivitySurvey).filter_by(project_id=project_id).one()
+    assert "payload" not in ProcessingActivitySurvey.__table__.columns
+    assert activity_survey_row.involved_activities == "COLLECT,TRANSFER"
+    assert activity_survey_row.collection_channels == "线上渠道"
+    assert activity_survey_row.collection_method == "接口采集"
+    assert activity_survey_row.transfer_protocol == "HTTPS"
+    assert activity_survey_row.storage_method == "不应保存"
 
     protection = unwrap(
         client.put(
             f"/api/v1/projects/{project_id}/survey/security-protection",
             json={
-                "classifiedProtectionAssessment": "已开展",
-                "identityAuthMeasures": ["密码", "多因素认证"],
-                "threatTypesDetectedLastYear": ["恶意扫描", "弱口令"],
-                "incidentDetailDescription": "未发生重大事件",
+                "complianceAssessmentStatus": "已完成等保测评",
+                "identityAuthenticationAndAccessControl": "密码和多因素认证",
+                "isPowerMonitoringSystem": "否",
+                "productionControlAreaProtection": "旧电力监控字段可独立保存",
+                "classifiedProtectionDone": "NO",
             },
         )
     )
-    assert protection["identityAuthMeasures"] == ["密码", "多因素认证"]
+    assert protection["complianceAssessmentStatus"] == "已完成等保测评"
+    assert protection["identityAuthenticationAndAccessControl"] == "密码和多因素认证"
+    assert protection["isPowerMonitoringSystem"] == "NO"
+    assert protection["productionControlAreaProtection"] == "旧电力监控字段可独立保存"
+    assert "classifiedProtectionDone" not in protection
+    protection_row = session.query(SecurityProtectionSurvey).filter_by(project_id=project_id).one()
+    assert "payload" not in SecurityProtectionSurvey.__table__.columns
+    assert protection_row.compliance_assessment_status == "已完成等保测评"
+    assert protection_row.identity_authentication_and_access_control == "密码和多因素认证"
+    assert protection_row.is_power_monitoring_system == "NO"
+
+    protection_yes = unwrap(
+        client.put(
+            f"/api/v1/projects/{project_id}/survey/security-protection",
+            json={
+                "isPowerMonitoringSystem": "YES",
+                "powerDispatchAuthentication": "已部署调度数字证书",
+            },
+        )
+    )
+    assert protection_yes["isPowerMonitoringSystem"] == "YES"
+    assert protection_yes["powerDispatchAuthentication"] == "已部署调度数字证书"
 
     items = unwrap(client.get(f"/api/v1/projects/{project_id}/evaluation/items?pageNo=1&pageSize=1"))
     item_id = items["list"][0]["id"]
@@ -358,7 +465,10 @@ def test_basic_plan_survey_evaluation_and_risk_flow(client):
     assert suggestion["harmImpactObject"] == "社会秩序和公共利益"
     assert suggestion["needsManualReview"] is False
     assert suggestion["harmAnalysisTrace"]["step3"]
+    assert suggestion["harmAnalysisTrace"]["step4"] == "按保护等级匹配风险危害程度等级：较高。"
     assert suggestion["harmAnalysisTrace"]["step2Reason"] == "影响电力供应连续性，可能对公共利益造成严重危害。"
+    assert "符合情况：基本符合" in suggestion["harmAnalysisTrace"]["step2Basis"]
+    assert "符合情况：PARTIAL" not in suggestion["harmAnalysisTrace"]["step2Basis"]
     assert any("项目系统类别" in item for item in suggestion["harmAnalysisTrace"]["step2Basis"])
     assert any("判定规则" in item for item in suggestion["harmAnalysisTrace"]["step2Basis"])
     assert suggestion["harmAnalysisTrace"]["step2Evidence"] == []
@@ -432,6 +542,188 @@ def test_basic_plan_survey_evaluation_and_risk_flow(client):
     assert updated["riskSourceDescription"] == "manual problem"
 
 
+def test_basic_info_excel_template_import_and_export(client):
+    project_id = create_project(client, project_code="ENST-TEST-BASIC-EXCEL")
+
+    template_response = client.get(f"/api/v1/projects/{project_id}/basic-info/export-template")
+    assert template_response.status_code == 200
+    assert template_response.mimetype == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+    workbook = load_workbook(BytesIO(template_response.data))
+    assert workbook.sheetnames == ["项目基本情况", "被评估单位基本信息", "联系人信息"]
+    assert [cell.value for cell in workbook["项目基本情况"][1]] == [
+        "项目编号",
+        "项目名称",
+        "评估所依据的法律法规",
+        "评估所参考的标准规范",
+        "评估开始日期",
+        "评估结束日期",
+    ]
+    assert [cell.value for cell in workbook["被评估单位基本信息"][1]] == [
+        "单位名称",
+        "邮政编码",
+    ]
+    assert [cell.value for cell in workbook["联系人信息"][1]] == [
+        "姓名",
+        "所属部门",
+        "移动电话",
+        "职务/职称",
+        "办公电话",
+        "电子邮件",
+    ]
+
+    workbook["项目基本情况"].append([
+        "ENST-TEST-BASIC-EXCEL",
+        "导入后的项目名称",
+        "网络安全法、数据安全法",
+        "GB/T 35273; GB/T 22239",
+        "2026-06-01",
+        "2026-06-10",
+    ])
+    workbook["被评估单位基本信息"].append([
+        "被评估单位",
+        "310000",
+    ])
+    workbook["联系人信息"].append([
+        "张三",
+        "信息部",
+        "13800000000",
+        "经理",
+        "0571-88888888",
+        "zhangsan@example.com",
+    ])
+
+    imported = unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/basic-info/import",
+            data={"file": (workbook_stream(workbook), "basic-info.xlsx")},
+            content_type="multipart/form-data",
+        )
+    )
+    assert imported["projectNumber"] == "ENST-TEST-BASIC-EXCEL"
+    assert imported["projectName"] == "导入后的项目名称"
+    assert imported["laws"] == [{"id": "网络安全法", "name": "网络安全法"}, {"id": "数据安全法", "name": "数据安全法"}]
+    assert imported["standards"] == [{"id": "GB/T 35273", "name": "GB/T 35273"}, {"id": "GB/T 22239", "name": "GB/T 22239"}]
+    assert imported["assessmentPlan"] == {"startDate": "2026-06-01", "endDate": "2026-06-10"}
+    assert imported["organization"]["postalCode"] == "310000"
+    assert "assessmentTarget" not in imported
+    assert "creditCode" not in imported["organization"]
+    assert imported["contacts"][0]["email"] == "zhangsan@example.com"
+
+    not_persisted = unwrap(client.get(f"/api/v1/projects/{project_id}/basic-info"))
+    assert not_persisted["projectName"] == "Flow Project"
+    assert not_persisted["contacts"] == []
+
+    saved = unwrap(
+        client.put(
+            f"/api/v1/projects/{project_id}/basic-info",
+            json=imported,
+        )
+    )
+    assert saved["projectName"] == "导入后的项目名称"
+
+    export_response = client.get(f"/api/v1/projects/{project_id}/basic-info/export")
+    assert export_response.status_code == 200
+    exported = load_workbook(BytesIO(export_response.data))
+    assert exported.sheetnames == ["项目基本情况", "被评估单位基本信息", "联系人信息"]
+    assert exported["项目基本情况"].cell(row=2, column=1).value == "ENST-TEST-BASIC-EXCEL"
+    assert exported["项目基本情况"].cell(row=2, column=2).value == "导入后的项目名称"
+    assert exported["项目基本情况"].cell(row=2, column=3).value == "网络安全法、数据安全法"
+    assert exported["被评估单位基本信息"].cell(row=2, column=1).value == "被评估单位"
+    assert exported["联系人信息"].cell(row=2, column=1).value == "张三"
+
+
+def test_plan_team_excel_import_export_and_preserves_focus_gap_items(client):
+    project_id = create_project(client, project_code="ENST-TEST-PLAN-TEAM-EXCEL")
+    unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/plan/assessment-team",
+            json={"name": "旧成员", "organization": "旧单位", "role": "旧角色"},
+        )
+    )
+    focus = unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/plan/focus-points",
+            json={"name": "重点关注", "domain": "制度", "riskLevel": "HIGH"},
+        )
+    )
+    gap = unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/plan/gap-items",
+            json={"gapItem": "差距项", "dimension": "管理", "currentYearScore": 80},
+        )
+    )
+
+    template_response = client.get(f"/api/v1/projects/{project_id}/plan/team-export-template")
+    assert template_response.status_code == 200
+    workbook = load_workbook(BytesIO(template_response.data))
+    assert workbook.sheetnames == ["评估团队", "被评估方团队"]
+    assert [cell.value for cell in workbook["评估团队"][1]] == ["姓名", "单位", "角色"]
+    assert [cell.value for cell in workbook["被评估方团队"][1]] == ["公司/部门", "姓名", "职位", "联系方式"]
+
+    workbook["评估团队"].append(["李四", "评估机构", "组长"])
+    workbook["被评估方团队"].append(["信息部", "王五", "经理", "13900000000"])
+    imported = unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/plan/team-import",
+            data={"file": (workbook_stream(workbook), "plan-team.xlsx")},
+            content_type="multipart/form-data",
+        )
+    )
+    assert imported["assessmentTeam"] == [
+        {"id": imported["assessmentTeam"][0]["id"], "name": "李四", "organization": "评估机构", "role": "组长"}
+    ]
+    assert imported["clientTeam"] == [
+        {"id": imported["clientTeam"][0]["id"], "department": "信息部", "name": "王五", "position": "经理", "contact": "13900000000"}
+    ]
+
+    session = SessionLocal()
+    assessment_rows = session.query(AssessmentTeamMember).filter_by(project_id=project_id, deleted=False).all()
+    client_rows = session.query(ClientTeamMember).filter_by(project_id=project_id, deleted=False).all()
+    focus_rows = session.query(FocusPoint).filter_by(project_id=project_id, deleted=False).all()
+    gap_rows = session.query(GapItem).filter_by(project_id=project_id, deleted=False).all()
+    assert [row.name for row in assessment_rows] == ["李四"]
+    assert [row.name for row in client_rows] == ["王五"]
+    assert [row.id for row in focus_rows] == [focus["id"]]
+    assert [row.id for row in gap_rows] == [gap["id"]]
+
+    export_response = client.get(f"/api/v1/projects/{project_id}/plan/team-export")
+    assert export_response.status_code == 200
+    exported = load_workbook(BytesIO(export_response.data))
+    assert exported.sheetnames == ["评估团队", "被评估方团队"]
+    assert exported["评估团队"].cell(row=2, column=1).value == "李四"
+    assert exported["被评估方团队"].cell(row=2, column=2).value == "王五"
+
+
+def test_plan_team_import_reports_header_validation_errors(client):
+    project_id = create_project(client, project_code="ENST-TEST-PLAN-TEAM-ERROR")
+    workbook = Workbook()
+    workbook.active.title = "评估团队"
+    workbook["评估团队"].append(["姓名", "单位", "错误列"])
+    client_sheet = workbook.create_sheet("被评估方团队")
+    client_sheet.append(["公司/部门", "姓名", "职位", "联系方式"])
+
+    response = client.post(
+        f"/api/v1/projects/{project_id}/plan/team-import",
+        data={"file": (workbook_stream(workbook), "plan-team.xlsx")},
+        content_type="multipart/form-data",
+    )
+    assert response.status_code == 400
+    payload = response.get_json()
+    assert payload["code"] == "IMPORT_VALIDATION_FAILED"
+    assert payload["message"] == "导入文件存在格式错误"
+    assert payload["data"] == {
+        "errors": [
+            {
+                "sheetName": "评估团队",
+                "rowNo": 1,
+                "field": "角色",
+                "reason": "表头名称与模板不一致，请使用最新模板。",
+            }
+        ]
+    }
+
+
 def test_business_system_diagram_upload_updates_file_ids(client):
     project_id = create_project(client, project_code="ENST-TEST-DIAGRAM")
     business_system = unwrap(
@@ -465,8 +757,19 @@ def test_business_system_diagram_upload_updates_file_ids(client):
     assert data_flow["file"]["bizType"] == "SURVEY_DATA_FLOW_DIAGRAM"
     assert data_flow["businessSystem"]["businessFlowFileId"] == data_flow["file"]["fileId"]
 
+    vsdx_bytes = b"PK\x03\x04vsdx"
+    vsdx = unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/survey/business-systems/{record_id}/topology-diagram",
+            data={"file": (BytesIO(vsdx_bytes), "topology.vsdx")},
+            content_type="multipart/form-data",
+        )
+    )
+    assert vsdx["file"]["fileName"] == "topology.vsdx"
+    assert vsdx["businessSystem"]["topologyFileId"] == vsdx["file"]["fileId"]
+
     stored = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/business-systems?pageNo=1&pageSize=10"))
-    assert stored["list"][0]["topologyFileId"] == topology["file"]["fileId"]
+    assert stored["list"][0]["topologyFileId"] == vsdx["file"]["fileId"]
     assert stored["list"][0]["businessFlowFileId"] == data_flow["file"]["fileId"]
 
     download = client.get(topology["file"]["downloadUrl"])
@@ -644,6 +947,12 @@ def test_evaluation_import_export_and_report_management(client):
     assert exported.max_column == 8
     assert exported.cell(row=2, column=7).value == "updated record"
     assert exported.cell(row=2, column=8).value == "NON_COMPLIANT"
+    unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/survey/business-systems",
+            json={"systemName": "Flow Project", "businessFunction": "Flow report business"},
+        )
+    )
 
     generated = unwrap(
         client.post(
@@ -726,3 +1035,115 @@ def test_evaluation_import_resolves_blank_item_id_by_context(client):
     )
     assert {record.item_id for record in records} == expected_item_ids
     assert {record.evaluation_record for record in records} == {f"legacy import row {row_no}" for row_no in duplicate_rows}
+
+
+def test_evaluation_import_reports_invalid_result_and_preserves_records(client):
+    project_id = create_project(client)
+    unwrap(client.post(f"/api/v1/projects/{project_id}/start"))
+
+    template_response = client.get(f"/api/v1/projects/{project_id}/evaluation/export-template")
+    workbook = load_workbook(BytesIO(template_response.data))
+    worksheet = workbook.active
+    worksheet.cell(row=2, column=7).value = "original record"
+    worksheet.cell(row=2, column=8).value = "PARTIAL"
+
+    stream = BytesIO()
+    workbook.save(stream)
+    stream.seek(0)
+    imported = unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/evaluation/import",
+            data={"file": (stream, "evaluation-import.xlsx")},
+            content_type="multipart/form-data",
+        )
+    )
+    assert imported["importedCount"] == 1
+
+    worksheet.cell(row=2, column=7).value = "should not overwrite"
+    worksheet.cell(row=2, column=8).value = "错误符合情况"
+    stream = BytesIO()
+    workbook.save(stream)
+    stream.seek(0)
+    failed = unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/evaluation/import",
+            data={"file": (stream, "evaluation-import.xlsx")},
+            content_type="multipart/form-data",
+        )
+    )
+
+    assert failed["importedCount"] == 0
+    assert failed["failedCount"] == 1
+    assert failed["errors"] == [
+        {
+            "rowNo": 2,
+            "field": "符合情况",
+            "reason": "符合情况列只能填写符合、基本符合、不符合、不适用或对应枚举值 COMPLIANT、PARTIAL、NON_COMPLIANT、NOT_APPLICABLE。",
+        }
+    ]
+    session = SessionLocal()
+    record = (
+        session.query(EvaluationRecord)
+        .filter(EvaluationRecord.project_id == project_id, EvaluationRecord.deleted.is_(False))
+        .one()
+    )
+    assert record.evaluation_record == "original record"
+    assert record.evaluation_result == "PARTIAL"
+
+
+def test_evaluation_import_reports_readonly_column_changes_and_preserves_records(client):
+    project_id = create_project(client, project_code="ENST-TEST-IMPORT-READONLY")
+    unwrap(client.post(f"/api/v1/projects/{project_id}/start"))
+
+    template_response = client.get(f"/api/v1/projects/{project_id}/evaluation/export-template")
+    workbook = load_workbook(BytesIO(template_response.data))
+    worksheet = workbook.active
+    worksheet.cell(row=2, column=7).value = "original record"
+    worksheet.cell(row=2, column=8).value = "PARTIAL"
+    stream = BytesIO()
+    workbook.save(stream)
+    stream.seek(0)
+    imported = unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/evaluation/import",
+            data={"file": (stream, "evaluation-import.xlsx")},
+            content_type="multipart/form-data",
+        )
+    )
+    assert imported["importedCount"] == 1
+
+    worksheet.cell(row=2, column=2).value = "edited item code"
+    worksheet.cell(row=2, column=3).value = "edited sheet"
+    worksheet.cell(row=2, column=4).value = "edited category"
+    worksheet.cell(row=2, column=5).value = "edited subcategory"
+    worksheet.cell(row=2, column=6).value = "edited check point"
+    worksheet.cell(row=2, column=7).value = "should not overwrite"
+    worksheet.cell(row=2, column=8).value = "NON_COMPLIANT"
+    stream = BytesIO()
+    workbook.save(stream)
+    stream.seek(0)
+    failed = unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/evaluation/import",
+            data={"file": (stream, "evaluation-import.xlsx")},
+            content_type="multipart/form-data",
+        )
+    )
+
+    assert failed["importedCount"] == 0
+    assert failed["failedCount"] == 5
+    assert failed["errors"] == [
+        {"rowNo": 2, "field": "检查项编号", "reason": "检查项编号与系统检查项不一致，请使用最新导出模板。"},
+        {"rowNo": 2, "field": "工作表", "reason": "工作表与系统检查项不一致，请使用最新导出模板。"},
+        {"rowNo": 2, "field": "一级分类", "reason": "一级分类与系统检查项不一致，请使用最新导出模板。"},
+        {"rowNo": 2, "field": "二级分类", "reason": "二级分类与系统检查项不一致，请使用最新导出模板。"},
+        {"rowNo": 2, "field": "检查要点", "reason": "检查要点与系统检查项不一致，请使用最新导出模板。"},
+    ]
+    session = SessionLocal()
+    record = (
+        session.query(EvaluationRecord)
+        .filter(EvaluationRecord.project_id == project_id, EvaluationRecord.deleted.is_(False))
+        .one()
+    )
+    assert record.evaluation_record == "original record"
+    assert record.evaluation_result == "PARTIAL"

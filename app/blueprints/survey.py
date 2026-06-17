@@ -26,6 +26,16 @@ SURVEY_MODELS = {
 }
 
 
+@bp.get("/projects/<project_id>/survey/data-processor-basic")
+def get_data_processor_basic(project_id: str):
+    return success(survey_service.get_data_processor_basic(project_id))
+
+
+@bp.put("/projects/<project_id>/survey/data-processor-basic")
+def save_data_processor_basic(project_id: str):
+    return success(survey_service.save_data_processor_basic(project_id, request_json()))
+
+
 @bp.get("/projects/<project_id>/survey/security-protection")
 def get_security_protection(project_id: str):
     return success(survey_service.get_security_protection(project_id))

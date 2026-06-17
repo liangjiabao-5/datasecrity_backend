@@ -25,7 +25,7 @@ def register_error_handlers(app: Flask) -> None:
                 {
                     "code": exc.code,
                     "message": exc.message,
-                    "data": None,
+                    "data": exc.data,
                     "traceId": getattr(g, "trace_id", uuid.uuid4().hex[:10]),
                 }
             ),

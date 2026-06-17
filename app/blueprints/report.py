@@ -20,6 +20,10 @@ def report_readiness(project_id: str):
 
 @bp.post("/projects/<project_id>/reports/generate")
 def report_generate(project_id: str):
+    """创建报告生成任务。
+
+    接口只负责解析请求并返回任务信息，Word 渲染、文件保存和状态回写由报告服务及后台任务完成。
+    """
     return success(report_service.generate_report(project_id, request_json()))
 
 

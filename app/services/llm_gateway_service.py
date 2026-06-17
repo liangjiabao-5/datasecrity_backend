@@ -89,6 +89,51 @@ def suggest_harm_analysis(
     return parsed
 
 
+def summarize_security_measures(context: dict) -> str | None:
+    """调用 DashScope 将安全防护措施调研数据整理成报告段落。"""
+    config = _llm_config()
+    if not config["enabled"] or not config["api_key"]:
+        logger.info(
+            "跳过 DashScope 安全措施段落生成：大模型未启用或 API Key 未配置。enabled=%s api_key_configured=%s project_id=%s",
+            config.get("enabled"),
+            bool(config.get("api_key")),
+            context.get("projectId"),
+        )
+        return None
+
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "你是数据安全风险评估报告编制助手。请只基于输入的安全防护措施调研数据进行归纳，"
+                "不得补充未给出的事实，必须返回 JSON 对象。"
+            ),
+        },
+        {
+            "role": "user",
+            "content": json.dumps(
+                {
+                    "task": "将安全防护措施调研数据整理为一段可直接写入报告的中文表述。",
+                    "input": context,
+                    "rules": [
+                        "输出适合接在“在安全措施方面，某单位”或“数据安全技术方面，”后面",
+                        "不要重复输出单位名称、系统名称、章节标题或开头套话",
+                        "保留关键措施和已填写状态，合并同类项，语句自然连贯",
+                        "不使用项目符号，不输出多段，不超过180字",
+                        "末尾不要句号",
+                    ],
+                    "outputSchema": {"summary": "一段中文报告表述"},
+                },
+                ensure_ascii=False,
+            ),
+        },
+    ]
+    content = _chat_completion(config, messages)
+    parsed = _parse_json_object(content)
+    summary = _limit(parsed.get("summary"), 300)
+    return summary or None
+
+
 def _llm_config() -> dict:
     """从 Flask 配置中读取 DashScope 兼容 OpenAI 协议的调用参数。"""
     if not has_app_context():

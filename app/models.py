@@ -205,13 +205,10 @@ class ProjectBasicInfo(ModelMixin, Base):
 
     id = Column(String(64), primary_key=True, default=lambda: new_id("basic"))
     project_id = Column(String(64), ForeignKey("project.id"), nullable=False, unique=True)
-    project_description = Column(Text)
-    system_description = Column(Text)
     laws = Column(JSON)
     standards = Column(JSON)
     plan_start_date = Column(String(20))
     plan_end_date = Column(String(20))
-    assessment_target = Column(String(500))
 
 
 class AssessedOrganization(ModelMixin, Base):
@@ -220,11 +217,7 @@ class AssessedOrganization(ModelMixin, Base):
     id = Column(String(64), primary_key=True, default=lambda: new_id("org"))
     project_id = Column(String(64), ForeignKey("project.id"), nullable=False, unique=True)
     name = Column(String(200))
-    address = Column(String(500))
-    credit_code = Column(String(100))
     postal_code = Column(String(40))
-    data_security_owner = Column(String(100))
-    description = Column(Text)
 
 
 class ProjectContact(ModelMixin, Base):
@@ -307,8 +300,32 @@ class BusinessSystem(ModelMixin, Base):
     coverage_area = Column(String(200))
     classified_protection_level = Column(String(40))
     related_departments = Column(Text)
+    data_scopes = Column(Text)
     topology_file_id = Column(String(64))
     business_flow_file_id = Column(String(64))
+
+
+class DataProcessorBasicSurvey(ModelMixin, Base):
+    __tablename__ = "data_processor_basic_survey"
+
+    id = Column(String(64), primary_key=True, default=lambda: new_id("dpb"))
+    project_id = Column(String(64), ForeignKey("project.id"), nullable=False, unique=True)
+    unit_name = Column(String(200))
+    unified_social_credit_code = Column(String(100))
+    office_address = Column(String(500))
+    legal_representative = Column(String(100))
+    staff_size = Column(String(100))
+    business_scope = Column(Text)
+    data_security_officer = Column(String(100))
+    contact_info = Column(String(200))
+    unit_nature = Column(String(100))
+    specific_processor_type = Column(String(200))
+    power_industry_category = Column(String(200))
+    business_operation_area = Column(String(200))
+    data_processing_location = Column(String(500))
+    main_business_scope = Column(Text)
+    business_scale = Column(String(200))
+    administrative_license = Column(Text)
 
 
 class DataAsset(ModelMixin, Base):
@@ -356,7 +373,7 @@ class ImportantDataAsset(ModelMixin, Base):
     scale = Column(String(100))
     data_source = Column(String(200))
     business_flow = Column(Text)
-    processing_activity_types = Column(JSON)
+    processing_activity_types = Column(Text)
 
 
 class CoreDataAsset(ModelMixin, Base):
@@ -370,7 +387,7 @@ class CoreDataAsset(ModelMixin, Base):
     scale = Column(String(100))
     data_source = Column(String(200))
     business_flow = Column(Text)
-    processing_activity_types = Column(JSON)
+    processing_activity_types = Column(Text)
 
 
 class DataProcessingActivity(ModelMixin, Base):
@@ -384,7 +401,7 @@ class DataProcessingActivity(ModelMixin, Base):
     method = Column(String(200))
     scale = Column(String(100))
     involves_personal_info = Column(Boolean)
-    protection_measures = Column(JSON)
+    protection_measures = Column(Text)
     description = Column(Text)
 
 
@@ -393,7 +410,30 @@ class SecurityProtectionSurvey(ModelMixin, Base):
 
     id = Column(String(64), primary_key=True, default=lambda: new_id("sec"))
     project_id = Column(String(64), ForeignKey("project.id"), nullable=False, unique=True)
-    payload = Column(JSON)
+    compliance_assessment_status = Column(Text)
+    data_security_management = Column(Text)
+    network_security_devices_and_policies = Column(Text)
+    identity_authentication_and_access_control = Column(Text)
+    vulnerability_management = Column(Text)
+    remote_management_software = Column(Text)
+    account_password_management = Column(Text)
+    security_technology_application = Column(Text)
+    is_power_monitoring_system = Column(String(20))
+    production_control_area_protection = Column(Text)
+    security_access_area_setup = Column(Text)
+    power_monitoring_dedicated_network = Column(Text)
+    zone_isolation_device_usage = Column(Text)
+    wide_area_network_connection_security = Column(Text)
+    power_dispatch_authentication = Column(Text)
+    network_service_security_control = Column(Text)
+    security_access_area_security_control = Column(Text)
+    zone_boundary_protection = Column(Text)
+    product_security_reliability = Column(Text)
+    operator_security_monitoring_warning = Column(Text)
+    security_incidents_and_threats = Column(Text)
+    detected_threats = Column(Text)
+    public_threat_alerts = Column(Text)
+    other_security_threats = Column(Text)
 
 
 class ProcessingActivitySurvey(ModelMixin, Base):
@@ -401,7 +441,53 @@ class ProcessingActivitySurvey(ModelMixin, Base):
 
     id = Column(String(64), primary_key=True, default=lambda: new_id("pas"))
     project_id = Column(String(64), ForeignKey("project.id"), nullable=False, unique=True)
-    payload = Column(JSON)
+    involved_activities = Column(Text)
+    collection_channels = Column(Text)
+    collection_method = Column(Text)
+    collection_data_scope = Column(Text)
+    collection_purpose = Column(Text)
+    collection_frequency = Column(Text)
+    collection_external_sources = Column(Text)
+    collection_contracts = Column(Text)
+    collection_related_systems = Column(Text)
+    collection_public_device_usage = Column(Text)
+    storage_method = Column(Text)
+    data_center = Column(Text)
+    storage_system = Column(Text)
+    external_storage_provider = Column(Text)
+    storage_location = Column(Text)
+    storage_duration = Column(Text)
+    backup_redundancy_strategy = Column(Text)
+    online_channel = Column(Text)
+    offline_transfer = Column(Text)
+    transfer_protocol = Column(Text)
+    data_interface = Column(Text)
+    use_purpose = Column(Text)
+    use_method = Column(Text)
+    use_scope = Column(Text)
+    use_scenario = Column(Text)
+    algorithm_rules = Column(Text)
+    processing_details = Column(Text)
+    algorithm_recommendation_service = Column(Text)
+    entrusted_or_joint_processing = Column(Text)
+    provide_purpose = Column(Text)
+    provide_method = Column(Text)
+    provide_scope = Column(Text)
+    data_recipients = Column(Text)
+    provide_contracts = Column(Text)
+    provided_personal_info_and_important_data = Column(Text)
+    public_purpose = Column(Text)
+    public_method = Column(Text)
+    public_scope = Column(Text)
+    public_audience_size = Column(Text)
+    public_data_types = Column(Text)
+    public_data_scale = Column(Text)
+    deletion_scenarios = Column(Text)
+    deletion_method = Column(Text)
+    data_archive = Column(Text)
+    media_destruction = Column(Text)
+    cross_border_presence = Column(Text)
+    cross_border_description = Column(Text)
 
 
 class ProjectRiskSummaryRecord(ModelMixin, Base):

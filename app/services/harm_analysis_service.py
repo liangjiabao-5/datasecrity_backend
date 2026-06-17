@@ -43,6 +43,19 @@ POSSIBILITY_LEVEL_ALIASES = {
     "LOW": "LOW",
     "低": "LOW",
 }
+RESULT_NAMES = {
+    "COMPLIANT": "符合",
+    "PARTIAL": "基本符合",
+    "NON_COMPLIANT": "不符合",
+    "NOT_APPLICABLE": "不适用",
+}
+HARM_LEVEL_NAMES = {
+    "VERY_HIGH": "很高",
+    "HIGH": "高",
+    "RELATIVELY_HIGH": "较高",
+    "MEDIUM": "中",
+    "LOW": "低",
+}
 
 
 def suggest(project_id: str, risk_item_id: str, payload: dict | None = None) -> dict:
@@ -276,6 +289,7 @@ def _build_suggestion(session, project: Project, record: ProjectRiskSummaryRecor
     # 第五步：按规则矩阵匹配数据安全保护等级，再映射到风险危害程度等级。
     protection_level = _protection_level(rule_config, impacted_object, damage_degree)
     harm_level = _harm_level(rule_config, protection_level)
+    harm_level_name = _harm_level_name(harm_level)
 
     # 第六步：读取最终危害程度等级对应的描述、影响对象和示例，用于前端形成闭环展示。
     level_rule = _level_rule(session, project.harm_model_id, harm_level)
@@ -321,12 +335,13 @@ def _build_suggestion(session, project: Project, record: ProjectRiskSummaryRecor
         "step2Basis": step2_basis,
         "step2Evidence": step2_evidence,
         "step3": f"按侵害客体和侵害程度匹配数据安全保护等级：第{protection_level}级。" if protection_level else "未能匹配到数据安全保护等级。",
-        "step4": f"按保护等级匹配风险危害程度等级：{harm_level}。" if harm_level else "未能匹配到风险危害程度等级。",
+        "step4": f"按保护等级匹配风险危害程度等级：{harm_level_name}。" if harm_level else "未能匹配到风险危害程度等级。",
         "systemCategory": system_category,
         "impactedObject": impacted_object,
         "damageDegree": damage_degree,
         "dataSecurityProtectionLevel": protection_level,
         "harmLevel": harm_level,
+        "harmLevelName": harm_level_name,
         "reason": step2_reason,
         "evidence": step2_evidence,
         "conflicts": conflicts,
@@ -345,6 +360,7 @@ def _build_suggestion(session, project: Project, record: ProjectRiskSummaryRecor
         "damageDegree": damage_degree,
         "dataSecurityProtectionLevel": protection_level,
         "harmLevel": harm_level,
+        "harmLevelName": harm_level_name,
         "harmDescription": harm_description,
         "harmImpactObject": object_name,
         "harmExample": harm_example,
@@ -695,7 +711,7 @@ def _evidence(record: ProjectRiskSummaryRecord) -> list[str]:
     if record.check_point:
         evidence.append(f"检查要点：{record.check_point}")
     if record.evaluation_result:
-        evidence.append(f"符合情况：{record.evaluation_result}")
+        evidence.append(f"符合情况：{_evaluation_result_name(record.evaluation_result)}")
     if record.evaluation_record:
         evidence.append(f"评估结果：{record.evaluation_record}")
     if record.risk_description:
@@ -731,7 +747,7 @@ def _step2_basis(record: ProjectRiskSummaryRecord, system_category_name: str, ev
     if record.check_point:
         basis.append(f"检查要点：{record.check_point}")
     if record.evaluation_result:
-        basis.append(f"符合情况：{record.evaluation_result}")
+        basis.append(f"符合情况：{_evaluation_result_name(record.evaluation_result)}")
     if record.evaluation_record:
         basis.append(f"评估结果：{record.evaluation_record}")
     basis.append("判定规则：先判断是否侵害国家安全，再判断是否侵害社会秩序或公共利益，最后判断是否侵害公民、法人和其他组织合法权益；同时结合数据泄露、丢失、篡改、中断等影响范围判断侵害程度。")
@@ -751,12 +767,15 @@ def _trace_from_payload(payload: dict) -> dict:
         _payload_value(payload, "system_category", "systemCategory"),
         _payload_value(payload, "harm_level", "harmLevel"),
     )
+    harm_level = _payload_value(payload, "harm_level", "harmLevel")
+    harm_level_name = _harm_level_name(harm_level)
     return {
         "systemCategory": _payload_value(payload, "system_category", "systemCategory"),
         "impactedObject": _payload_value(payload, "impacted_object", "impactedObject"),
         "damageDegree": _payload_value(payload, "damage_degree", "damageDegree"),
         "dataSecurityProtectionLevel": _payload_value(payload, "data_security_protection_level", "dataSecurityProtectionLevel"),
-        "harmLevel": _payload_value(payload, "harm_level", "harmLevel"),
+        "harmLevel": harm_level,
+        "harmLevelName": harm_level_name,
         "step2Reason": _payload_value(payload, "step2_reason", "step2Reason", "reason"),
         "step2Basis": _payload_value(payload, "step2_basis", "step2Basis") or [],
         "step2Evidence": _payload_value(payload, "step2_evidence", "step2Evidence", "evidence") or [],
@@ -771,6 +790,18 @@ def _payload_value(payload: dict, *keys: str) -> Any:
         if key in payload:
             return payload.get(key)
     return None
+
+
+def _evaluation_result_name(value: Any) -> str:
+    key = str(value or "").strip()
+    return RESULT_NAMES.get(key, key)
+
+
+def _harm_level_name(value: Any) -> str | None:
+    harm_level = _normalize_harm_level(value)
+    if not harm_level:
+        return None
+    return HARM_LEVEL_NAMES.get(harm_level, harm_level)
 
 
 def _normalize_harm_level(value: Any) -> str | None:
