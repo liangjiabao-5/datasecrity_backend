@@ -1,4 +1,6 @@
-from flask import Blueprint, request
+from io import BytesIO
+
+from flask import Blueprint, request, send_file
 
 from app.common.response import success
 from app.common.utils import request_json
@@ -10,7 +12,7 @@ from app.models import (
     ImportantDataAsset,
     PersonalInfoAsset,
 )
-from app.services import crud_service, survey_service
+from app.services import crud_service, file_service, survey_docx_service, survey_service
 
 
 bp = Blueprint("survey", __name__)
@@ -68,6 +70,30 @@ def upload_business_system_data_flow_diagram(project_id: str, record_id: str):
     return success(survey_service.save_business_system_diagram(project_id, record_id, "data-flow", uploaded))
 
 
+@bp.get("/projects/<project_id>/survey/export-template")
+def export_survey_template(project_id: str):
+    return _send_generated_docx(
+        project_id,
+        survey_docx_service.export_template_docx(project_id),
+        "SURVEY_DOCX_TEMPLATE",
+    )
+
+
+@bp.post("/projects/<project_id>/survey/import")
+def import_survey_docx(project_id: str):
+    uploaded = request.files.get("file") or next(iter(request.files.values()), None)
+    return success(survey_docx_service.import_survey_docx(project_id, uploaded))
+
+
+@bp.get("/projects/<project_id>/survey/export")
+def export_survey_docx(project_id: str):
+    return _send_generated_docx(
+        project_id,
+        survey_docx_service.export_survey_docx(project_id),
+        "SURVEY_DOCX_EXPORT",
+    )
+
+
 @bp.get("/projects/<project_id>/survey/<kind>")
 def list_survey_records(project_id: str, kind: str):
     return success(crud_service.list_records(project_id, _model(kind)))
@@ -90,3 +116,9 @@ def delete_survey_record(project_id: str, kind: str, record_id: str):
 
 def _model(kind: str):
     return SURVEY_MODELS[kind]
+
+
+def _send_generated_docx(project_id: str, generated: tuple[str, bytes, str], biz_type: str):
+    file_name, content, content_type = generated
+    file_service.save_bytes(file_name, content, content_type, biz_type=biz_type, project_id=project_id)
+    return send_file(BytesIO(content), as_attachment=True, download_name=file_name, mimetype=content_type)

@@ -1,7 +1,7 @@
 from io import BytesIO
 
 from openpyxl import Workbook, load_workbook
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
 from app.common.exceptions import BusinessError, NotFoundError
 from app.common.pagination import page_args
@@ -23,6 +23,9 @@ RESULT_NAMES = {
     "NON_COMPLIANT": "不符合",
     "NOT_APPLICABLE": "不适用",
 }
+
+VALID_EVALUATION_RESULTS = set(RESULT_NAMES)
+RESULT_FILTER_ERROR_MESSAGE = "符合情况筛选值只能为 COMPLIANT、PARTIAL、NON_COMPLIANT、NOT_APPLICABLE"
 
 
 POSSIBILITY_NAMES = {"HIGH": "高", "MEDIUM": "中", "LOW": "低"}
@@ -117,22 +120,38 @@ def catalog(project_id: str) -> list[dict]:
 def list_items(project_id: str, args) -> dict:
     get_project(project_id)
     session = SessionLocal()
+    result_filters = _normalize_result_filter_args(args)
     query = session.query(ProjectAssessmentItem).filter(
         ProjectAssessmentItem.project_id == project_id,
         ProjectAssessmentItem.deleted.is_(False),
     )
     if args.get("categoryId"):
         query = query.filter(ProjectAssessmentItem.category_id == args.get("categoryId"))
-    if args.get("keyword"):
-        query = query.filter(ProjectAssessmentItem.check_point.like(f"%{args.get('keyword')}%"))
-    if args.get("result"):
-        query = query.outerjoin(
+    sheet_name = _arg_text(args, "sheet_name") or _arg_text(args, "sheetName")
+    if sheet_name:
+        query = query.filter(ProjectAssessmentItem.sheet_name == sheet_name)
+    category = _arg_text(args, "category")
+    if category:
+        query = query.filter(ProjectAssessmentItem.category == category)
+    keyword = _arg_text(args, "keyword")
+    if keyword:
+        like_keyword = f"%{keyword}%"
+        query = query.filter(
+            or_(
+                ProjectAssessmentItem.item_code.like(like_keyword),
+                ProjectAssessmentItem.check_point.like(like_keyword),
+                ProjectAssessmentItem.check_content.like(like_keyword),
+            )
+        )
+    if result_filters:
+        query = query.join(
             EvaluationRecord,
             and_(
+                EvaluationRecord.project_id == project_id,
                 EvaluationRecord.item_id == ProjectAssessmentItem.id,
                 EvaluationRecord.deleted.is_(False),
             ),
-        ).filter(EvaluationRecord.evaluation_result == args.get("result"))
+        ).filter(EvaluationRecord.evaluation_result.in_(result_filters))
 
     query = query.order_by(ProjectAssessmentItem.sort_order.asc())
     page_no, page_size = page_args()
@@ -145,6 +164,51 @@ def list_items(project_id: str, args) -> dict:
         "pageSize": page_size,
         "total": total,
     }
+
+
+def _arg_text(args, key: str) -> str | None:
+    value = args.get(key)
+    if value in (None, ""):
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _normalize_result_filter_args(args) -> list[str]:
+    raw_results = []
+    raw_results.extend(_arg_values(args, "results[]"))
+    raw_results.extend(_arg_values(args, "results"))
+
+    results = _split_result_filter_values(raw_results)
+    if not results:
+        results = _split_result_filter_values(_arg_values(args, "result"))
+
+    results = list(dict.fromkeys(results))
+    invalid_results = [value for value in results if value not in VALID_EVALUATION_RESULTS]
+    if invalid_results:
+        raise BusinessError("INVALID_EVALUATION_RESULT_FILTER", RESULT_FILTER_ERROR_MESSAGE)
+    return results
+
+
+def _arg_values(args, key: str) -> list:
+    if hasattr(args, "getlist"):
+        return args.getlist(key)
+    value = args.get(key) if hasattr(args, "get") else None
+    if isinstance(value, (list, tuple)):
+        return list(value)
+    return [] if value is None else [value]
+
+
+def _split_result_filter_values(values: list) -> list[str]:
+    results = []
+    for value in values:
+        if value in (None, ""):
+            continue
+        for item in str(value).split(","):
+            result = item.strip()
+            if result:
+                results.append(result)
+    return results
 
 
 def save_record(project_id: str, item_id: str, payload: dict) -> dict:

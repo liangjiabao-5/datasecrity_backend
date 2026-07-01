@@ -1,4 +1,5 @@
 from io import BytesIO
+from pathlib import Path
 from xml.etree import ElementTree as ET
 import zipfile
 
@@ -50,6 +51,98 @@ def workbook_stream(workbook):
     workbook.save(stream)
     stream.seek(0)
     return stream
+
+
+def survey_docx_stream(edits):
+    template = Path("doc") / "附录A（资料性）调研表格.docx"
+    source = BytesIO(template.read_bytes())
+    output = BytesIO()
+    namespace = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+    with zipfile.ZipFile(source) as zin, zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zout:
+        document = ET.fromstring(zin.read("word/document.xml"))
+        tables = list(document.iter(namespace + "tbl"))
+        for table_no, row_no, col_no, value in edits:
+            cell = tables[table_no].findall(namespace + "tr")[row_no].findall(namespace + "tc")[col_no]
+            texts = list(cell.iter(namespace + "t"))
+            if texts:
+                texts[0].text = value
+                for extra in texts[1:]:
+                    extra.text = ""
+            else:
+                paragraph = cell.find(namespace + "p")
+                if paragraph is None:
+                    paragraph = ET.SubElement(cell, namespace + "p")
+                run = ET.SubElement(paragraph, namespace + "r")
+                text = ET.SubElement(run, namespace + "t")
+                text.text = value
+        xml = ET.tostring(document, encoding="utf-8", xml_declaration=True)
+        for item in zin.infolist():
+            zout.writestr(item, xml if item.filename == "word/document.xml" else zin.read(item.filename))
+    output.seek(0)
+    return output
+
+
+def survey_docx_power_decomposed_stream(power_rows, threat_value=""):
+    template = Path("doc") / "附录A（资料性）调研表格.docx"
+    source = BytesIO(template.read_bytes())
+    output = BytesIO()
+    namespace = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+    with zipfile.ZipFile(source) as zin, zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zout:
+        document = ET.fromstring(zin.read("word/document.xml"))
+        tables = list(document.iter(namespace + "tbl"))
+        security_table = tables[7]
+        rows = security_table.findall(namespace + "tr")
+        row9 = _docx_sequence_row(security_table, namespace, "9")
+        row10 = _docx_sequence_row(security_table, namespace, "10")
+        row9_child_index = list(security_table).index(row9)
+        row10_child_index = list(security_table).index(row10) if row10 is not None else len(list(security_table))
+        for row in list(security_table)[row9_child_index:row10_child_index]:
+            security_table.remove(row)
+        for offset, values in enumerate(power_rows):
+            security_table.insert(row9_child_index + offset, _docx_row(values, namespace))
+        if threat_value:
+            row10 = _docx_sequence_row(security_table, namespace, "10")
+            _set_docx_cell_text(row10.findall(namespace + "tc")[-1], threat_value, namespace)
+        xml = ET.tostring(document, encoding="utf-8", xml_declaration=True)
+        for item in zin.infolist():
+            zout.writestr(item, xml if item.filename == "word/document.xml" else zin.read(item.filename))
+    output.seek(0)
+    return output
+
+
+def _docx_sequence_row(table, namespace, sequence):
+    for row in table.findall(namespace + "tr"):
+        cells = row.findall(namespace + "tc")
+        if cells and "".join(t.text or "" for t in cells[0].iter(namespace + "t")).strip() == sequence:
+            return row
+    return None
+
+
+def _docx_row(values, namespace):
+    row = ET.Element(namespace + "tr")
+    for value in values:
+        cell = ET.Element(namespace + "tc")
+        paragraph = ET.SubElement(cell, namespace + "p")
+        run = ET.SubElement(paragraph, namespace + "r")
+        text = ET.SubElement(run, namespace + "t")
+        text.text = value
+        row.append(cell)
+    return row
+
+
+def _set_docx_cell_text(cell, value, namespace):
+    texts = list(cell.iter(namespace + "t"))
+    if texts:
+        texts[0].text = value
+        for extra in texts[1:]:
+            extra.text = ""
+        return
+    paragraph = cell.find(namespace + "p")
+    if paragraph is None:
+        paragraph = ET.SubElement(cell, namespace + "p")
+    run = ET.SubElement(paragraph, namespace + "r")
+    text = ET.SubElement(run, namespace + "t")
+    text.text = value
 
 
 def test_project_create_start_and_list(client):
@@ -184,6 +277,107 @@ def test_score_uses_selected_score_model_result_values(client):
     assert score["detail"]["partialCount"] == 1
     assert score["detail"]["nonCompliantCount"] == 1
     assert score["scoreModelVersion"] == score_model["version"]
+
+
+def test_evaluation_items_support_multi_result_filters(client):
+    project_id = create_project(client, project_code="ENST-TEST-EVALUATION-FILTERS")
+    unwrap(client.post(f"/api/v1/projects/{project_id}/start"))
+
+    items = unwrap(client.get(f"/api/v1/projects/{project_id}/evaluation/items?pageNo=1&pageSize=3"))["list"]
+    for item, result in zip(items, ["COMPLIANT", "PARTIAL", "NON_COMPLIANT"]):
+        unwrap(
+            client.put(
+                f"/api/v1/projects/{project_id}/evaluation/items/{item['id']}/record",
+                json={"evaluationResult": result, "evaluationRecord": f"{result} record"},
+            )
+        )
+
+    multi = unwrap(
+        client.get(
+            f"/api/v1/projects/{project_id}/evaluation/items",
+            query_string=[
+                ("pageNo", "1"),
+                ("pageSize", "10"),
+                ("results[]", "PARTIAL"),
+                ("results[]", "NON_COMPLIANT"),
+            ],
+        )
+    )
+    assert [item["evaluationResult"] for item in multi["list"]] == ["PARTIAL", "NON_COMPLIANT"]
+    assert multi["total"] == 2
+
+    repeated = unwrap(
+        client.get(
+            f"/api/v1/projects/{project_id}/evaluation/items",
+            query_string=[
+                ("pageNo", "1"),
+                ("pageSize", "10"),
+                ("results", "PARTIAL"),
+                ("results", "NON_COMPLIANT"),
+            ],
+        )
+    )
+    assert [item["evaluationResult"] for item in repeated["list"]] == ["PARTIAL", "NON_COMPLIANT"]
+
+    comma_with_keyword = unwrap(
+        client.get(
+            f"/api/v1/projects/{project_id}/evaluation/items",
+            query_string={
+                "pageNo": "1",
+                "pageSize": "10",
+                "results": "PARTIAL,NON_COMPLIANT",
+                "keyword": items[1]["itemCode"],
+            },
+        )
+    )
+    assert comma_with_keyword["total"] == 1
+    assert comma_with_keyword["list"][0]["id"] == items[1]["id"]
+    assert comma_with_keyword["list"][0]["evaluationResult"] == "PARTIAL"
+
+    sheet_and_category = unwrap(
+        client.get(
+            f"/api/v1/projects/{project_id}/evaluation/items",
+            query_string={
+                "pageNo": "1",
+                "pageSize": "10",
+                "sheetName": items[1]["sheetName"],
+                "category": items[1]["category"],
+                "result": "PARTIAL",
+            },
+        )
+    )
+    assert sheet_and_category["total"] == 1
+    assert sheet_and_category["list"][0]["id"] == items[1]["id"]
+
+    legacy = unwrap(
+        client.get(
+            f"/api/v1/projects/{project_id}/evaluation/items",
+            query_string={"pageNo": "1", "pageSize": "10", "result": "PARTIAL"},
+        )
+    )
+    assert [item["evaluationResult"] for item in legacy["list"]] == ["PARTIAL"]
+
+    precedence = unwrap(
+        client.get(
+            f"/api/v1/projects/{project_id}/evaluation/items",
+            query_string=[
+                ("pageNo", "1"),
+                ("pageSize", "10"),
+                ("results[]", "NON_COMPLIANT"),
+                ("result", "PARTIAL"),
+            ],
+        )
+    )
+    assert [item["evaluationResult"] for item in precedence["list"]] == ["NON_COMPLIANT"]
+
+    invalid = client.get(
+        f"/api/v1/projects/{project_id}/evaluation/items",
+        query_string={"pageNo": "1", "pageSize": "10", "results[]": "UNKNOWN"},
+    )
+    assert invalid.status_code == 400
+    payload = invalid.get_json()
+    assert payload["code"] == "INVALID_EVALUATION_RESULT_FILTER"
+    assert payload["message"] == "符合情况筛选值只能为 COMPLIANT、PARTIAL、NON_COMPLIANT、NOT_APPLICABLE"
 
 
 def test_risk_refresh_uses_score_model_boundary_for_possibility(client):
@@ -722,6 +916,438 @@ def test_plan_team_import_reports_header_validation_errors(client):
             }
         ]
     }
+
+
+def test_survey_docx_import_overwrites_lists_and_export_fills_template(client):
+    project_id = create_project(client, project_code="ENST-TEST-SURVEY-DOCX")
+    unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/survey/business-systems",
+            json={"systemName": "旧系统", "businessFunction": "旧业务"},
+        )
+    )
+    unwrap(client.post(f"/api/v1/projects/{project_id}/survey/data-assets", json={"dataName": "旧数据资产"}))
+    unwrap(client.post(f"/api/v1/projects/{project_id}/survey/personal-info", json={"dataName": "旧个人信息"}))
+    unwrap(client.post(f"/api/v1/projects/{project_id}/survey/important-data", json={"dataName": "旧重要数据"}))
+    unwrap(client.post(f"/api/v1/projects/{project_id}/survey/core-data", json={"dataName": "旧核心数据"}))
+
+    survey_docx = survey_docx_stream(
+        [
+            (0, 1, 3, "星河电力有限公司"),
+            (0, 2, 3, "91330000000000000X"),
+            (0, 9, 2, "企业"),
+            (0, 12, 3, "华东区域"),
+            (0, 15, 3, "覆盖500万用户"),
+            (1, 1, 2, "营销业务系统"),
+            (1, 2, 2, "办理客户营销业务"),
+            (1, 3, 2, "居民客户"),
+            (1, 4, 2, "500万用户"),
+            (1, 8, 2, "☑一般数据 ☑个人信息 □重要数据 ☑核心数据"),
+            (2, 2, 0, "客户主数据"),
+            (2, 2, 1, "数据库"),
+            (2, 2, 2, "客户基础信息"),
+            (2, 2, 3, "10万条"),
+            (2, 2, 4, "CRM系统"),
+            (2, 2, 5, "本地数据中心"),
+            (2, 2, 6, "CRM流转至营销平台"),
+            (2, 2, 7, "是"),
+            (2, 2, 8, "个人信息"),
+            (2, 2, 9, "L3"),
+            (2, 2, 10, "是"),
+            (3, 2, 0, "手机号"),
+            (3, 2, 1, "联系方式"),
+            (3, 2, 2, "10万条"),
+            (3, 2, 3, "敏感"),
+            (3, 2, 4, "用户注册"),
+            (3, 2, 5, "注册后进入CRM"),
+            (4, 2, 0, "电力交易数据"),
+            (4, 2, 1, "交易类"),
+            (4, 2, 2, "1万条"),
+            (4, 2, 3, "交易平台"),
+            (4, 2, 4, "同步至数据仓库"),
+            (5, 2, 0, "调度核心数据"),
+            (5, 2, 1, "调度类"),
+            (5, 2, 2, "5000条"),
+            (5, 2, 3, "调度系统"),
+            (5, 2, 4, "仅在调度域流转"),
+            (6, 1, 2, "官网、APP"),
+            (6, 2, 2, "接口采集"),
+            (6, 17, 2, "HTTPS"),
+            (7, 1, 1, "已完成等保二级测评"),
+            (7, 4, 1, "密码和多因素认证"),
+        ]
+    )
+
+    imported = unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/survey/import",
+            data={"file": (survey_docx, "survey.docx")},
+            content_type="multipart/form-data",
+        )
+    )
+    assert imported["dataProcessorBasic"]["unitName"] == "星河电力有限公司"
+    assert imported["businessSystem"]["systemName"] == "营销业务系统"
+    assert imported["counts"] == {"dataAssets": 1, "personalInfo": 1, "importantData": 1, "coreData": 1}
+
+    processor = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/data-processor-basic"))
+    assert processor["unitName"] == "星河电力有限公司"
+    assert processor["businessScale"] == "覆盖500万用户"
+
+    systems = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/business-systems?pageNo=1&pageSize=10"))
+    assert systems["total"] == 1
+    assert systems["list"][0]["systemName"] == "营销业务系统"
+    assert systems["list"][0]["dataScopes"] == ["一般数据", "个人信息", "核心数据"]
+
+    assets = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/data-assets?pageNo=1&pageSize=10"))
+    assert assets["total"] == 1
+    assert assets["list"][0]["dataName"] == "客户主数据"
+    assert assets["list"][0]["dataForm"] == "数据库"
+    assert assets["list"][0]["personalInfo"] is True
+
+    personal = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/personal-info?pageNo=1&pageSize=10"))
+    assert personal["total"] == 1
+    assert personal["list"][0]["dataName"] == "手机号"
+    assert personal["list"][0]["sensitivity"] == "敏感"
+
+    important = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/important-data?pageNo=1&pageSize=10"))
+    assert important["total"] == 1
+    assert important["list"][0]["dataName"] == "电力交易数据"
+
+    core = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/core-data?pageNo=1&pageSize=10"))
+    assert core["total"] == 1
+    assert core["list"][0]["dataName"] == "调度核心数据"
+
+    processing = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/processing-activity-survey"))
+    assert processing["involvedActivities"] == ["COLLECT", "TRANSFER"]
+    assert processing["collectionChannels"] == "官网、APP"
+    assert processing["collectionMethod"] == "接口采集"
+    assert processing["onlineChannel"] == "HTTPS"
+
+    security = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/security-protection"))
+    assert security["complianceAssessmentStatus"] == "已完成等保二级测评"
+    assert security["identityAuthenticationAndAccessControl"] == "密码和多因素认证"
+
+    template_response = client.get(f"/api/v1/projects/{project_id}/survey/export-template")
+    assert template_response.status_code == 200
+    assert template_response.mimetype == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+    export_response = client.get(f"/api/v1/projects/{project_id}/survey/export")
+    assert export_response.status_code == 200
+    assert export_response.mimetype == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    with zipfile.ZipFile(BytesIO(export_response.data)) as exported:
+        document_xml = exported.read("word/document.xml").decode("utf-8")
+        assert "星河电力有限公司" in document_xml
+        assert "营销业务系统" in document_xml
+        assert "客户主数据" in document_xml
+        assert "手机号" in document_xml
+        assert "电力交易数据" in document_xml
+        assert "调度核心数据" in document_xml
+        assert "官网、APP" in document_xml
+        assert "密码和多因素认证" in document_xml
+
+
+def test_survey_docx_import_blank_questionnaires_clear_existing_values(client):
+    project_id = create_project(client, project_code="ENST-TEST-SURVEY-DOCX-BLANK")
+    unwrap(
+        client.put(
+            f"/api/v1/projects/{project_id}/survey/processing-activity-survey",
+            json={
+                "involvedActivities": ["COLLECT", "TRANSFER"],
+                "collectionChannels": "旧采集渠道",
+                "transferProtocol": "旧传输协议",
+            },
+        )
+    )
+    unwrap(
+        client.put(
+            f"/api/v1/projects/{project_id}/survey/security-protection",
+            json={
+                "isPowerMonitoringSystem": "YES",
+                "productionControlAreaProtection": "旧生产控制区防护",
+                "identityAuthenticationAndAccessControl": "旧身份鉴别",
+            },
+        )
+    )
+
+    unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/survey/import",
+            data={"file": (survey_docx_stream([]), "blank-survey.docx")},
+            content_type="multipart/form-data",
+        )
+    )
+
+    processing = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/processing-activity-survey"))
+    assert processing["involvedActivities"] == []
+    assert processing["collectionChannels"] == ""
+    assert processing["transferProtocol"] == ""
+
+    security = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/security-protection"))
+    assert security["isPowerMonitoringSystem"] == "NO"
+    assert security["productionControlAreaProtection"] == ""
+    assert security["identityAuthenticationAndAccessControl"].startswith("应用层面，用户通过账号和密码进行登录")
+
+
+def test_survey_docx_import_saves_security_answers_even_when_same_as_template_text(client):
+    project_id = create_project(client, project_code="ENST-TEST-SURVEY-DOCX-SECURITY-SAME")
+
+    unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/survey/import",
+            data={"file": (survey_docx_stream([]), "security-same-as-template.docx")},
+            content_type="multipart/form-data",
+        )
+    )
+
+    security = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/security-protection"))
+    assert security["complianceAssessmentStatus"] == "已开展了等级保护测评、上线前安全检测、功能检测、源代码检测、漏洞扫描。"
+    assert security["identityAuthenticationAndAccessControl"].startswith("应用层面，用户通过账号和密码进行登录")
+    assert security["vulnerabilityManagement"] == "针对漏洞扫描中发现的高危漏洞进行了整改。"
+    assert security["remoteManagementSoftware"] == "不涉及"
+    assert security["securityTechnologyApplication"].startswith("本系统不涉及敏感个人信息和重要数据")
+    assert security["isPowerMonitoringSystem"] == "NO"
+    assert security["networkServiceSecurityControl"] == ""
+    assert security["securityAccessAreaSecurityControl"] == ""
+    assert security["securityIncidentsAndThreats"].startswith("3年内未发生的网络和数据安全事件")
+    assert security["detectedThreats"] == "实际环境中通过检测工具、监测系统、日志审计等未发现威胁。"
+    assert security["publicThreatAlerts"] == "近期无公开发布的社会或特定行业威胁事件、威胁预警。"
+    assert security["otherSecurityThreats"].startswith("无其他可能面临的数据泄露")
+
+    session = SessionLocal()
+    row = session.query(SecurityProtectionSurvey).filter_by(project_id=project_id, deleted=False).one()
+    assert row.compliance_assessment_status == security["complianceAssessmentStatus"]
+    assert row.identity_authentication_and_access_control == security["identityAuthenticationAndAccessControl"]
+    assert row.security_incidents_and_threats == security["securityIncidentsAndThreats"]
+
+
+def test_survey_docx_import_none_markers_clear_asset_tables(client):
+    project_id = create_project(client, project_code="ENST-TEST-SURVEY-DOCX-ASSET-NONE")
+    unwrap(client.post(f"/api/v1/projects/{project_id}/survey/data-assets", json={"dataName": "旧数据资产"}))
+    unwrap(client.post(f"/api/v1/projects/{project_id}/survey/personal-info", json={"dataName": "旧个人信息"}))
+    unwrap(client.post(f"/api/v1/projects/{project_id}/survey/important-data", json={"dataName": "旧重要数据"}))
+    unwrap(client.post(f"/api/v1/projects/{project_id}/survey/core-data", json={"dataName": "旧核心数据"}))
+
+    imported = unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/survey/import",
+            data={
+                "file": (
+                    survey_docx_stream(
+                        [
+                            (2, 2, 0, "（ 不 涉 及 。）"),
+                            (3, 2, 0, "【无】"),
+                            (4, 2, 0, " 无 "),
+                            (5, 2, 0, "不 涉 及"),
+                        ]
+                    ),
+                    "asset-none-survey.docx",
+                )
+            },
+            content_type="multipart/form-data",
+        )
+    )
+
+    assert imported["counts"] == {"dataAssets": 0, "personalInfo": 0, "importantData": 0, "coreData": 0}
+    assert unwrap(client.get(f"/api/v1/projects/{project_id}/survey/data-assets?pageNo=1&pageSize=10"))["total"] == 0
+    assert unwrap(client.get(f"/api/v1/projects/{project_id}/survey/personal-info?pageNo=1&pageSize=10"))["total"] == 0
+    assert unwrap(client.get(f"/api/v1/projects/{project_id}/survey/important-data?pageNo=1&pageSize=10"))["total"] == 0
+    assert unwrap(client.get(f"/api/v1/projects/{project_id}/survey/core-data?pageNo=1&pageSize=10"))["total"] == 0
+
+
+def test_survey_docx_import_ignores_none_markers_when_deriving_processing_activities(client):
+    project_id = create_project(client, project_code="ENST-TEST-SURVEY-DOCX-PROCESSING-NONE")
+
+    unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/survey/import",
+            data={
+                "file": (
+                    survey_docx_stream(
+                        [
+                            (6, 1, 2, "（ 不 涉 及 。）"),
+                            (6, 2, 2, "【无】"),
+                            (6, 9, 2, " □ 无 "),
+                            (6, 17, 2, "HTTPS"),
+                        ]
+                    ),
+                    "processing-none-survey.docx",
+                )
+            },
+            content_type="multipart/form-data",
+        )
+    )
+
+    processing = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/processing-activity-survey"))
+    assert processing["involvedActivities"] == ["TRANSFER"]
+    assert processing["collectionChannels"] == "（ 不 涉 及 。）"
+    assert processing["collectionMethod"] == "【无】"
+    assert processing["collectionPublicDeviceUsage"] == "□ 无"
+    assert processing["onlineChannel"] == "HTTPS"
+
+
+def test_survey_docx_import_reads_decomposed_power_monitoring_protection_rows(client):
+    project_id = create_project(client, project_code="ENST-TEST-SURVEY-DOCX-POWER-DECOMPOSED")
+
+    unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/survey/import",
+            data={
+                "file": (
+                    survey_docx_power_decomposed_stream(
+                        [
+                            ["9", "是否为电力监控系统", "是"],
+                            ["", "生产控制区和管理信息区的设置和防护情况", "生产区已分区防护"],
+                            ["", "安全接入区的设立情况", "已设安全接入区"],
+                            ["", "电力监控专用网络的使用情况", "使用专用网络"],
+                            ["", "生产控制区与管理信息区、安全接入区的隔离及隔离装置使用情况", "部署隔离装置"],
+                            ["", "生产控制区与电力监控专用网络的广域网之间的联接安全方案", "广域网双向认证"],
+                            ["", "电力调度认证机制建设情况", "已部署调度证书"],
+                            ["", "网络服务的安全管控情况", "最小化开放服务"],
+                            ["", "安全接入区的安全管控情况", "接入区双因素认证"],
+                            ["", "电力监控系统分区边界的安全防护情况", "边界部署访问控制"],
+                            ["", "系统使用的产品安全可靠情况", "使用可信产品"],
+                            ["", "运营者的网络安全检测预警机制建设情况", "7x24 检测预警"],
+                        ],
+                        threat_value="3年内未发生重大事件",
+                    ),
+                    "power-decomposed-survey.docx",
+                )
+            },
+            content_type="multipart/form-data",
+        )
+    )
+
+    security = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/security-protection"))
+    assert security["isPowerMonitoringSystem"] == "YES"
+    assert security["productionControlAreaProtection"] == "生产区已分区防护"
+    assert security["securityAccessAreaSetup"] == "已设安全接入区"
+    assert security["powerMonitoringDedicatedNetwork"] == "使用专用网络"
+    assert security["zoneIsolationDeviceUsage"] == "部署隔离装置"
+    assert security["wideAreaNetworkConnectionSecurity"] == "广域网双向认证"
+    assert security["powerDispatchAuthentication"] == "已部署调度证书"
+    assert security["networkServiceSecurityControl"] == "最小化开放服务"
+    assert security["securityAccessAreaSecurityControl"] == "接入区双因素认证"
+    assert security["zoneBoundaryProtection"] == "边界部署访问控制"
+    assert security["productSecurityReliability"] == "使用可信产品"
+    assert security["operatorSecurityMonitoringWarning"] == "7x24 检测预警"
+    assert security["securityIncidentsAndThreats"] == "3年内未发生重大事件"
+
+
+def test_survey_docx_import_does_not_save_power_monitoring_subitem_titles_as_answers(client):
+    project_id = create_project(client, project_code="ENST-TEST-SURVEY-DOCX-POWER-TITLES")
+
+    unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/survey/import",
+            data={
+                "file": (
+                    survey_docx_power_decomposed_stream(
+                        [
+                            ["9", "是否为电力监控系统： ☑是  □否"],
+                            ["", "1）生产控制区和管理信息区的设置和防护情况"],
+                            ["", "2）安全接入区的设立情况"],
+                            ["", "3）电力监控专用网络的使用情况"],
+                            ["", "4）生产控制区与管理信息区、安全接入区的隔离及隔离装置使用情况"],
+                            ["", "5）生产控制区与电力监控专用网络的广域网之间的连接安全方案"],
+                            ["", "6）电力调度认证机制建设情况"],
+                            ["", "7）网络服务的安全管控情况8）安全接入区的安全管控情况"],
+                            ["", "9）电力监控系统分区边界的安全防护情况"],
+                            ["", "10）系统使用的产品安全可靠情况"],
+                            ["", "11）运营者的网络安全监测预警机制建设情况"],
+                        ]
+                    ),
+                    "power-title-only-survey.docx",
+                )
+            },
+            content_type="multipart/form-data",
+        )
+    )
+
+    security = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/security-protection"))
+    assert security["isPowerMonitoringSystem"] == "YES"
+    assert security["networkServiceSecurityControl"] == ""
+    assert security["securityAccessAreaSecurityControl"] == ""
+
+
+def test_survey_docx_import_skips_power_monitoring_detail_rows_when_marked_no(client):
+    project_id = create_project(client, project_code="ENST-TEST-SURVEY-DOCX-POWER-NO")
+    unwrap(
+        client.put(
+            f"/api/v1/projects/{project_id}/survey/security-protection",
+            json={
+                "isPowerMonitoringSystem": "YES",
+                "productionControlAreaProtection": "旧生产控制区防护",
+                "securityAccessAreaSetup": "旧安全接入区",
+                "operatorSecurityMonitoringWarning": "旧检测预警",
+            },
+        )
+    )
+
+    unwrap(
+        client.post(
+            f"/api/v1/projects/{project_id}/survey/import",
+            data={
+                "file": (
+                    survey_docx_power_decomposed_stream(
+                        [
+                            ["9", "是否为电力监控系统： □是  ☑否"],
+                            ["", "1）生产控制区和管理信息区的设置和防护情况", "不应导入生产区"],
+                            ["", "2）安全接入区的设立情况", "不应导入接入区"],
+                            ["", "3）电力监控专用网络的使用情况", "不应导入专网"],
+                            ["", "4）生产控制区与管理信息区、安全接入区的隔离及隔离装置使用情况", "不应导入隔离"],
+                            ["", "5）生产控制区与电力监控专用网络的广域网之间的连接安全方案", "不应导入广域网"],
+                            ["", "6）电力调度认证机制建设情况", "不应导入调度认证"],
+                            ["", "7）网络服务的安全管控情况", "不应导入网络服务"],
+                            ["", "8）安全接入区的安全管控情况", "不应导入安全接入区管控"],
+                            ["", "9）电力监控系统分区边界的安全防护情况", "不应导入边界"],
+                            ["", "10）系统使用的产品安全可靠情况", "不应导入产品"],
+                            ["", "11）运营者的网络安全监测预警机制建设情况", "不应导入预警"],
+                        ],
+                        threat_value="3年内未发生安全事件",
+                    ),
+                    "power-no-survey.docx",
+                )
+            },
+            content_type="multipart/form-data",
+        )
+    )
+
+    security = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/security-protection"))
+    assert security["isPowerMonitoringSystem"] == "NO"
+    assert security["productionControlAreaProtection"] == ""
+    assert security["securityAccessAreaSetup"] == ""
+    assert security["powerMonitoringDedicatedNetwork"] == ""
+    assert security["zoneIsolationDeviceUsage"] == ""
+    assert security["wideAreaNetworkConnectionSecurity"] == ""
+    assert security["powerDispatchAuthentication"] == ""
+    assert security["networkServiceSecurityControl"] == ""
+    assert security["securityAccessAreaSecurityControl"] == ""
+    assert security["zoneBoundaryProtection"] == ""
+    assert security["productSecurityReliability"] == ""
+    assert security["operatorSecurityMonitoringWarning"] == ""
+    assert security["securityIncidentsAndThreats"] == "3年内未发生安全事件"
+
+
+def test_survey_docx_import_rejects_non_docx(client):
+    project_id = create_project(client, project_code="ENST-TEST-SURVEY-DOCX-INVALID")
+
+    response = client.post(
+        f"/api/v1/projects/{project_id}/survey/import",
+        data={"file": (BytesIO(b"not a word file"), "survey.txt")},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 400
+    payload = response.get_json()
+    assert payload["code"] == "IMPORT_VALIDATION_FAILED"
+    assert payload["data"]["errors"] == [
+        {
+            "tableName": None,
+            "rowNo": 0,
+            "field": "file",
+            "reason": "导入文件必须是 .docx 格式。",
+        }
+    ]
 
 
 def test_business_system_diagram_upload_updates_file_ids(client):
