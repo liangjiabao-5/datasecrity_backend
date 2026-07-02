@@ -180,6 +180,19 @@ POWER_MONITORING_DEFAULT_PAYLOAD = {
     "product_security_reliability": "",
     "operator_security_monitoring_warning": "",
 }
+POWER_MONITORING_DETAIL_FIELDS = [
+    "production_control_area_protection",
+    "security_access_area_setup",
+    "power_monitoring_dedicated_network",
+    "zone_isolation_device_usage",
+    "wide_area_network_connection_security",
+    "power_dispatch_authentication",
+    "network_service_security_control",
+    "security_access_area_security_control",
+    "zone_boundary_protection",
+    "product_security_reliability",
+    "operator_security_monitoring_warning",
+]
 POWER_MONITORING_FIELD_KEYWORDS = [
     ("is_power_monitoring_system", ("是否为电力监控系统",)),
     ("production_control_area_protection", ("生产控制区和管理信息区", "设置", "防护")),
@@ -364,11 +377,6 @@ def _parse_power_monitoring_protection(table, default_table) -> dict:
     if start is None:
         return payload
 
-    row9_cells = rows[start].findall(W + "tc")
-    row9_value = _changed_row_value_at(table, default_table, start, default_start)
-    if len(row9_cells) < 3 and row9_value:
-        payload["production_control_area_protection"] = row9_value
-
     end = _find_sequence_row_index(table, "10") or len(rows)
     default_end = _find_sequence_row_index(default_table, "10") or len(default_rows)
     power_status = ""
@@ -384,8 +392,16 @@ def _parse_power_monitoring_protection(table, default_table) -> dict:
     if power_status == "NO":
         return payload
 
-    for offset, row_index in enumerate(range(start, end)):
-        field = _power_monitoring_field_for_label(_row_label_text(rows[row_index]))
+    detail_index = 0
+    for row_index in range(start + 1, end):
+        detected_field = _power_monitoring_field_for_label(_row_label_text(rows[row_index]))
+        fallback_field = (
+            POWER_MONITORING_DETAIL_FIELDS[detail_index]
+            if detail_index < len(POWER_MONITORING_DETAIL_FIELDS)
+            else None
+        )
+        detail_index += 1
+        field = detected_field or fallback_field
         if not field or field == "is_power_monitoring_system":
             continue
         payload[field] = _security_row_answer_value(table, row_index, POWER_MONITORING_FIELD_PROMPTS.get(field, []))
@@ -477,31 +493,38 @@ def _strip_answer_prompts(value: str, prompts: list[str]) -> str:
     if not text:
         return ""
     for prompt in prompts:
-        prompt = str(prompt or "").strip()
-        if not prompt:
-            continue
-        if text.startswith(prompt):
-            answer = text[len(prompt):].strip()
-            return "" if _is_known_prompt_text(answer) else answer
-        if _comparison_text(text) == _comparison_text(prompt):
-            return ""
+        for candidate in _prompt_candidates(prompt):
+            if text.startswith(candidate):
+                answer = text[len(candidate):].strip()
+                return "" if _is_known_prompt_text(answer) else answer
+            if _comparison_text(text) == _comparison_text(candidate):
+                return ""
     return "" if _is_known_prompt_text(text) else text
 
 
-def _is_known_prompt_text(value: str) -> bool:
-    text = str(value or "").strip()
+def _prompt_candidates(prompt: str) -> list[str]:
+    text = str(prompt or "").strip()
     if not text:
+        return []
+    without_index = re.sub(r"^\s*\d+[）).、]\s*", "", text).strip()
+    return list(dict.fromkeys(candidate for candidate in [text, without_index] if candidate))
+
+
+def _is_known_prompt_text(value: str) -> bool:
+    normalized = _comparison_text(value)
+    if not normalized:
         return False
-    normalized = _comparison_text(text)
-    for prompts in (
+    prompt_groups = (
         *SECURITY_ROW_PROMPTS.values(),
         *SECURITY_THREAT_PROMPTS.values(),
         *POWER_MONITORING_FIELD_PROMPTS.values(),
-    ):
-        for prompt in prompts:
-            if normalized == _comparison_text(prompt):
-                return True
-    return False
+    )
+    return any(
+        normalized == _comparison_text(candidate)
+        for prompts in prompt_groups
+        for prompt in prompts
+        for candidate in _prompt_candidates(prompt)
+    )
 
 
 def _changed_security_sequence_value(table, default_table, sequence: int) -> str:

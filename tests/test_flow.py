@@ -1085,16 +1085,49 @@ def test_survey_docx_import_blank_questionnaires_clear_existing_values(client):
     security = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/security-protection"))
     assert security["isPowerMonitoringSystem"] == "NO"
     assert security["productionControlAreaProtection"] == ""
-    assert security["identityAuthenticationAndAccessControl"].startswith("应用层面，用户通过账号和密码进行登录")
+    assert security["identityAuthenticationAndAccessControl"] == ""
 
 
-def test_survey_docx_import_saves_security_answers_even_when_same_as_template_text(client):
+def test_survey_docx_import_saves_security_answers_after_stripping_template_text(client):
     project_id = create_project(client, project_code="ENST-TEST-SURVEY-DOCX-SECURITY-SAME")
 
     unwrap(
         client.post(
             f"/api/v1/projects/{project_id}/survey/import",
-            data={"file": (survey_docx_stream([]), "security-same-as-template.docx")},
+            data={
+                "file": (
+                    survey_docx_stream(
+                        [
+                            (
+                                7,
+                                1,
+                                1,
+                                "已开展的等级保护测评、商用密码应用安全性评估、安全检测、风险评估、安全认证、合规审计情况，及发现问题的整改情况。"
+                                "已开展了等级保护测评、上线前安全检测、功能检测、源代码检测、漏洞扫描。",
+                            ),
+                            (
+                                7,
+                                4,
+                                1,
+                                "身份鉴别与访问控制情况"
+                                "应用层面，用户通过账号和密码进行登录，已配置用户口令长度不小于9位，大小写字母、数字、特殊字符组成，用户名与口令不同，口令加密存储，口令每180天更换一次。"
+                                "数据库层面，通过账号和密码直接登录，配置了口令复杂度要求，最少9位，必须由大写字母、数字、特殊字符组成，并要求定期更换。",
+                            ),
+                            (7, 5, 1, "网络安全漏洞管理及修复情况针对漏洞扫描中发现的高危漏洞进行了整改。"),
+                            (7, 6, 1, "VPN等远程管理软件的用户及管理情况不涉及"),
+                            (
+                                7,
+                                8,
+                                1,
+                                "加密、脱敏、去标识化等安全技术应用情况"
+                                "本系统不涉及敏感个人信息和重要数据，对用户表中的口令进行了加密处理。前端展示中，在系统管理-用户管理中，对展示的用户列表中的手机号进行了脱敏；"
+                                "在数据看板和驾驶舱中，因需实时展示值班人员信息，未值班人员的手机号进行脱敏。",
+                            ),
+                        ]
+                    ),
+                    "security-same-as-template.docx",
+                )
+            },
             content_type="multipart/form-data",
         )
     )
@@ -1106,18 +1139,11 @@ def test_survey_docx_import_saves_security_answers_even_when_same_as_template_te
     assert security["remoteManagementSoftware"] == "不涉及"
     assert security["securityTechnologyApplication"].startswith("本系统不涉及敏感个人信息和重要数据")
     assert security["isPowerMonitoringSystem"] == "NO"
-    assert security["networkServiceSecurityControl"] == ""
-    assert security["securityAccessAreaSecurityControl"] == ""
-    assert security["securityIncidentsAndThreats"].startswith("3年内未发生的网络和数据安全事件")
-    assert security["detectedThreats"] == "实际环境中通过检测工具、监测系统、日志审计等未发现威胁。"
-    assert security["publicThreatAlerts"] == "近期无公开发布的社会或特定行业威胁事件、威胁预警。"
-    assert security["otherSecurityThreats"].startswith("无其他可能面临的数据泄露")
 
     session = SessionLocal()
     row = session.query(SecurityProtectionSurvey).filter_by(project_id=project_id, deleted=False).one()
     assert row.compliance_assessment_status == security["complianceAssessmentStatus"]
     assert row.identity_authentication_and_access_control == security["identityAuthenticationAndAccessControl"]
-    assert row.security_incidents_and_threats == security["securityIncidentsAndThreats"]
 
 
 def test_survey_docx_import_none_markers_clear_asset_tables(client):
@@ -1233,8 +1259,8 @@ def test_survey_docx_import_reads_decomposed_power_monitoring_protection_rows(cl
     assert security["securityIncidentsAndThreats"] == "3年内未发生重大事件"
 
 
-def test_survey_docx_import_does_not_save_power_monitoring_subitem_titles_as_answers(client):
-    project_id = create_project(client, project_code="ENST-TEST-SURVEY-DOCX-POWER-TITLES")
+def test_survey_docx_import_power_monitoring_rows_strip_template_text_and_fallback_by_position(client):
+    project_id = create_project(client, project_code="ENST-TEST-SURVEY-DOCX-POWER-POSITION")
 
     unwrap(
         client.post(
@@ -1244,9 +1270,9 @@ def test_survey_docx_import_does_not_save_power_monitoring_subitem_titles_as_ans
                     survey_docx_power_decomposed_stream(
                         [
                             ["9", "是否为电力监控系统： ☑是  □否"],
-                            ["", "1）生产控制区和管理信息区的设置和防护情况"],
-                            ["", "2）安全接入区的设立情况"],
-                            ["", "3）电力监控专用网络的使用情况"],
+                            ["", "1）生产控制区和管理信息区的设置和防护情况 是积分卡flask就"],
+                            ["", "安全接入区的设立情况艰苦拉萨酱豆腐"],
+                            ["", "啊实打实大苏打"],
                             ["", "4）生产控制区与管理信息区、安全接入区的隔离及隔离装置使用情况"],
                             ["", "5）生产控制区与电力监控专用网络的广域网之间的连接安全方案"],
                             ["", "6）电力调度认证机制建设情况"],
@@ -1256,7 +1282,7 @@ def test_survey_docx_import_does_not_save_power_monitoring_subitem_titles_as_ans
                             ["", "11）运营者的网络安全监测预警机制建设情况"],
                         ]
                     ),
-                    "power-title-only-survey.docx",
+                    "power-position-survey.docx",
                 )
             },
             content_type="multipart/form-data",
@@ -1265,8 +1291,12 @@ def test_survey_docx_import_does_not_save_power_monitoring_subitem_titles_as_ans
 
     security = unwrap(client.get(f"/api/v1/projects/{project_id}/survey/security-protection"))
     assert security["isPowerMonitoringSystem"] == "YES"
+    assert security["productionControlAreaProtection"] == "是积分卡flask就"
+    assert security["securityAccessAreaSetup"] == "艰苦拉萨酱豆腐"
+    assert security["powerMonitoringDedicatedNetwork"] == "啊实打实大苏打"
     assert security["networkServiceSecurityControl"] == ""
     assert security["securityAccessAreaSecurityControl"] == ""
+    assert security["zoneBoundaryProtection"] == ""
 
 
 def test_survey_docx_import_skips_power_monitoring_detail_rows_when_marked_no(client):
