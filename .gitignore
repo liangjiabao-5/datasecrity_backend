@@ -4,8 +4,8 @@ __pycache__/
 .venv/
 venv/
 instance/
-.env
 .coverage
 htmlcov/
 ~$*
 .tmp_selftest/
+.tmp/

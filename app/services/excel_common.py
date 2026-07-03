@@ -34,8 +34,7 @@ def load_import_workbook(file):
             ]
         )
     try:
-        file.stream.seek(0)
-        return load_workbook(file.stream, data_only=True)
+        return load_workbook_from_upload(file)
     except Exception as exc:
         raise_import_validation(
             [
@@ -48,6 +47,12 @@ def load_import_workbook(file):
             ],
             exc,
         )
+
+
+def load_workbook_from_upload(file):
+    file.stream.seek(0)
+    content = file.read()
+    return load_workbook(BytesIO(content), data_only=True)
 
 
 def validate_workbook_schema(workbook, sheet_specs: list[tuple[str, list[str]]]) -> None:

@@ -1,6 +1,6 @@
 from io import BytesIO
 
-from openpyxl import Workbook, load_workbook
+from openpyxl import Workbook
 from sqlalchemy import and_, or_
 
 from app.common.exceptions import BusinessError, NotFoundError
@@ -14,6 +14,7 @@ from app.models import (
     ScoreModelRange,
 )
 from app.services.audit_service import audit
+from app.services.excel_common import load_workbook_from_upload
 from app.services.project_service import get_project
 
 
@@ -352,8 +353,7 @@ def import_records_workbook(project_id: str, file) -> dict:
     if not file or not file.filename:
         raise BusinessError("FILE_REQUIRED", "Upload file is required.")
     try:
-        file.stream.seek(0)
-        workbook = load_workbook(file.stream, data_only=True)
+        workbook = load_workbook_from_upload(file)
     except Exception as exc:
         raise BusinessError("INVALID_IMPORT_FILE", "Only valid xlsx files are supported.") from exc
 
