@@ -58,8 +58,9 @@ def suggest_harm_analysis(
         {
             "role": "system",
             "content": (
-                "你是数据安全风险评估辅助助手。请只基于输入事实和规则约束判断风险可能侵害的客体与侵害程度。"
-                "不得虚构现场证据，不得输出结论前言，必须返回 JSON 对象。"
+                "你是数据安全风险评估辅助助手。请只基于输入事实和规则约束完成四步危害程度分析。"
+                "危害程度分析必须针对当前风险行的具体问题、涉及数据及处理活动说明后果和判定依据，"
+                "不得套用与其他风险行相同的等级通用话术，不得虚构现场证据，不得输出结论前言，必须返回 JSON 对象。"
             ),
         },
         {
@@ -182,6 +183,7 @@ def _harm_analysis_prompt(
     """根据风险行、现场测评上下文和危害模型规则构造 JSON 提示词。"""
     object_priority = rule_config.get("object_priority") or ["NATIONAL_SECURITY", "PUBLIC_INTEREST", "LEGAL_RIGHTS"]
     system_config = (rule_config.get("system_categories") or {}).get(system_category) or {}
+    related_data = str(record.related_data or "").strip()
     logger.info(
         "开始构造 DashScope 危害程度分析提示词。project_id=%s risk_item_id=%s assessment_category=%s evaluation_result=%s",
         project.id,
@@ -190,7 +192,7 @@ def _harm_analysis_prompt(
         record.evaluation_result,
     )
     return {
-        "task": "判断该风险行的数据安全被破坏时，优先侵害的客体和侵害程度。",
+        "task": "结合全部输入完成四步数据安全风险危害程度分析，并为当前具体问题生成专属分析。",
         "input": {
             "projectId": project.id,
             "systemType": project.system_type,
@@ -204,24 +206,34 @@ def _harm_analysis_prompt(
             "riskTypes": record.risk_types or [],
             "riskDescription": _limit(record.risk_description, 1200),
             "riskSourceDescription": _limit(record.risk_source_description, 1200),
+            "relatedData": _limit(related_data, 1200) if related_data not in {"", "-"} else None,
+            "relatedActivities": record.related_activities or [],
         },
         "rules": {
             "impactObjectPriority": object_priority,
             "impactObjectEnum": rule_config.get("object_names") or {},
             "damageDegreeEnum": rule_config.get("damage_degree_names") or {},
             "allowedForSystemCategory": system_config.get("impact_degrees") or {},
+            "protectionLevelMatrix": rule_config.get("protection_level_matrix") or {},
+            "harmLevelByProtectionLevel": rule_config.get("harm_level_by_protection_level") or {},
             "judgementOrder": [
-                "结合现场测评分类、检查要点、评估结果区分风险业务背景和严重性",
-                "先判断是否侵害国家安全",
-                "再判断是否侵害社会秩序或公共利益",
-                "最后判断是否侵害公民、法人和其他组织合法权益",
-                "结合数据泄露、丢失、篡改等风险影响判断侵害程度",
+                "第一步：根据项目系统类型和系统类别明确被评估对象类别",
+                "第二步：综合现场测评分类、检查要点、符合情况、现场记录、风险描述、风险源、涉及数据及处理活动，按国家安全、社会秩序和公共利益、合法权益的优先级确定受侵害客体及侵害程度",
+                "第三步：根据侵害客体和侵害程度匹配数据安全保护等级",
+                "第四步：根据数据安全保护等级匹配风险危害程度等级，并形成当前问题的具体危害程度分析",
+            ],
+            "harmAnalysisRequirements": [
+                "必须点明当前风险源或现场发现的具体问题",
+                "必须结合涉及的数据及类型、级别和涉及的数据处理活动；输入为空时明确说明信息不足，不得虚构",
+                "必须说明风险触发后的具体安全后果、影响对象、影响范围或业务后果以及等级判定依据",
+                "不同风险行不得仅因危害等级相同而返回相同描述，不得照抄危害等级通用定义",
             ],
         },
         "outputSchema": {
             "impactedObject": "NATIONAL_SECURITY | PUBLIC_INTEREST | LEGAL_RIGHTS",
             "damageDegree": "GENERAL | SERIOUS | EXTREMELY_SERIOUS",
             "reason": "不超过200字的判断理由",
+            "harmAnalysis": "不超过350字、针对当前具体问题的危害程度分析，不得使用等级统一话术",
             "evidence": ["从输入中引用的关键事实，不超过3条"],
             "confidence": "0到1之间的小数",
             "needsManualReview": "无法判断或规则冲突时为 true",

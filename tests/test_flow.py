@@ -9,6 +9,7 @@ from app.extensions import SessionLocal
 from app.models import (
     AssessedOrganization,
     AssessmentTeamMember,
+    AssessmentTemplateItem,
     BusinessSystem,
     ClientTeamMember,
     DataProcessorBasicSurvey,
@@ -17,6 +18,7 @@ from app.models import (
     GapItem,
     ProcessingActivitySurvey,
     ProjectBasicInfo,
+    RiskSourceTemplate,
     SecurityProtectionSurvey,
 )
 
@@ -159,6 +161,86 @@ def test_project_create_start_and_list(client):
 
     projects = unwrap(client.get("/api/v1/projects?pageNo=1&pageSize=10"))
     assert projects["total"] == 1
+
+
+def test_project_code_can_be_shared_by_multiple_system_projects(client):
+    first_id = create_project(client, project_code="ENST-SHARED-001")
+    second_id = create_project(client, project_code="ENST-SHARED-001")
+
+    assert first_id != second_id
+    projects = unwrap(client.get("/api/v1/projects?pageNo=1&pageSize=10&keyword=ENST-SHARED-001"))
+    assert projects["total"] == 2
+    assert {project["projectCode"] for project in projects["list"]} == {"ENST-SHARED-001"}
+
+
+def test_project_code_can_be_updated_to_existing_code(client):
+    first_id = create_project(client, project_code="ENST-SHARED-EDIT-001")
+    second_id = create_project(client, project_code="ENST-SHARED-EDIT-002")
+
+    updated = unwrap(
+        client.put(
+            f"/api/v1/projects/{second_id}",
+            json={
+                "projectName": "Flow Project",
+                "projectCode": "ENST-SHARED-EDIT-001",
+                "assessmentOrg": "Test Org",
+            },
+        )
+    )
+
+    assert first_id != second_id
+    assert updated["projectCode"] == "ENST-SHARED-EDIT-001"
+    projects = unwrap(client.get("/api/v1/projects?pageNo=1&pageSize=10&keyword=ENST-SHARED-EDIT-001"))
+    assert projects["total"] == 2
+
+
+def test_assessment_item_id_flows_to_evaluation_and_risk_lists(client):
+    session = SessionLocal()
+    template_items = (
+        session.query(AssessmentTemplateItem)
+        .filter(AssessmentTemplateItem.template_id == "tpl-gb", AssessmentTemplateItem.deleted.is_(False))
+        .all()
+    )
+    assert len(template_items) == 391
+    assert not any(item.sheet_name.endswith(("113-3-20", "125", "76+13", "87")) for item in template_items)
+    assert any(item.assessment_item_id == "AQJS077" and item.sheet_name == "数据安全技术" for item in template_items)
+    risk_template = (
+        session.query(RiskSourceTemplate)
+        .filter(
+            RiskSourceTemplate.sheet_name == "数据安全管理",
+            RiskSourceTemplate.category == "安全管理制度",
+            RiskSourceTemplate.subcategory == "数据安全制度体系",
+            RiskSourceTemplate.deleted.is_(False),
+        )
+        .order_by(RiskSourceTemplate.sort_order.asc())
+        .first()
+    )
+    risk_template.risk_source_type = "数据安全制度流程存在缺陷"
+    session.commit()
+
+    project_id = create_project(client, project_code="ENST-TEST-ASSESSMENT-ID")
+    unwrap(client.post(f"/api/v1/projects/{project_id}/start"))
+
+    items = unwrap(client.get(f"/api/v1/projects/{project_id}/evaluation/items?pageNo=1&pageSize=1"))
+    evaluation_item = items["list"][0]
+    assert evaluation_item["assessmentItemId"] == "AQGL001"
+    assert evaluation_item["sheetName"] == "数据安全管理"
+
+    unwrap(
+        client.put(
+            f"/api/v1/projects/{project_id}/evaluation/items/{evaluation_item['id']}/record",
+            json={"evaluationResult": "PARTIAL", "evaluationRecord": "assessment id risk record"},
+        )
+    )
+    unwrap(client.post(f"/api/v1/projects/{project_id}/risk-summary/refresh", json={}))
+
+    for path in ["risk-sources", "risk-items", "risk-suggestions"]:
+        page = unwrap(client.get(f"/api/v1/projects/{project_id}/{path}?pageNo=1&pageSize=1"))
+        assert page["list"][0]["assessmentItemId"] == "AQGL001"
+    source_page = unwrap(client.get(f"/api/v1/projects/{project_id}/risk-sources?pageNo=1&pageSize=1"))
+    assert source_page["list"][0]["assessmentSubcategory"] == "数据安全制度体系"
+    assert "assessmentSubitem" not in source_page["list"][0]
+    assert source_page["list"][0]["riskSourceType"] == "数据安全制度流程存在缺陷"
 
 
 def test_default_risk_matrix_matches_linkage_chart(client):
@@ -657,6 +739,7 @@ def test_basic_plan_survey_evaluation_and_risk_flow(client):
     assert suggestion["harmLevel"] == "RELATIVELY_HIGH"
     assert suggestion["dataSecurityProtectionLevel"] == 3
     assert suggestion["harmImpactObject"] == "社会秩序和公共利益"
+    assert "影响电力供应连续性" in suggestion["harmDescription"]
     assert suggestion["needsManualReview"] is False
     assert suggestion["harmAnalysisTrace"]["step3"]
     assert suggestion["harmAnalysisTrace"]["step4"] == "按保护等级匹配风险危害程度等级：较高。"
@@ -1508,6 +1591,15 @@ def test_harm_analysis_prompt_includes_evaluation_context(client, monkeypatch):
     unwrap(client.post(f"/api/v1/projects/{project_id}/risk-summary/refresh", json={}))
     risk_items = unwrap(client.get(f"/api/v1/projects/{project_id}/risk-items?pageNo=1&pageSize=1"))
     risk_item_id = risk_items["list"][0]["id"]
+    unwrap(
+        client.put(
+            f"/api/v1/projects/{project_id}/risk-sources/{risk_item_id}",
+            json={
+                "relatedData": ["用户身份信息/L3", "业务交易数据/L2"],
+                "relatedActivities": ["收集", "存储", "使用和加工"],
+            },
+        )
+    )
     captured = {}
 
     def fake_chat_completion(_config, messages):
@@ -1520,6 +1612,7 @@ def test_harm_analysis_prompt_includes_evaluation_context(client, monkeypatch):
                 "impactedObject": "LEGAL_RIGHTS",
                 "damageDegree": "SERIOUS",
                 "reason": "根据现场测评上下文判断。",
+                "harmAnalysis": "现场未落实访问控制，导致用户身份信息在存储和使用环节存在未授权访问风险，可能严重侵害用户合法权益，因此危害程度为中。",
                 "confidence": 0.8,
                 "needsManualReview": False,
             },
@@ -1534,6 +1627,22 @@ def test_harm_analysis_prompt_includes_evaluation_context(client, monkeypatch):
     assert captured["checkPoint"] == item["checkPoint"]
     assert captured["evaluationResult"] == "NON_COMPLIANT"
     assert captured["evaluationRecord"] == "现场记录用于区分严重性"
+    assert captured["relatedData"] == "用户身份信息/L3、业务交易数据/L2"
+    assert captured["relatedActivities"] == ["收集", "存储", "使用和加工"]
+    assert suggestion["harmDescription"] == "现场未落实访问控制，导致用户身份信息在存储和使用环节存在未授权访问风险，可能严重侵害用户合法权益，因此危害程度为中。"
+    assert "涉及的数据及类型、级别：用户身份信息/L3、业务交易数据/L2" in suggestion["harmAnalysisTrace"]["step2Basis"]
+    assert "涉及的数据处理活动：收集、存储、使用和加工" in suggestion["harmAnalysisTrace"]["step2Basis"]
+
+    unwrap(
+        client.put(
+            f"/api/v1/projects/{project_id}/risk-sources/{risk_item_id}",
+            json={"relatedData": ["用户身份信息/L4"]},
+        )
+    )
+    updated_suggestion = unwrap(
+        client.post(f"/api/v1/projects/{project_id}/risk-items/{risk_item_id}/harm-analysis/suggest", json={})
+    )
+    assert updated_suggestion["harmAnalysisInputHash"] != suggestion["harmAnalysisInputHash"]
 
 
 def test_evaluation_import_export_and_report_management(client):
@@ -1546,11 +1655,13 @@ def test_evaluation_import_export_and_report_management(client):
 
     workbook = load_workbook(BytesIO(template_response.data))
     worksheet = workbook.active
-    assert worksheet.cell(row=1, column=7).value == "评估结果"
-    assert worksheet.cell(row=1, column=8).value == "符合情况"
+    assert worksheet.cell(row=1, column=3).value == "评估项ID"
+    assert worksheet.cell(row=1, column=8).value == "评估结果"
+    assert worksheet.cell(row=1, column=9).value == "符合情况"
     assert worksheet.cell(row=2, column=1).value
-    worksheet.cell(row=2, column=7).value = "imported record"
-    worksheet.cell(row=2, column=8).value = "PARTIAL"
+    assert worksheet.cell(row=2, column=3).value == "AQGL001"
+    worksheet.cell(row=2, column=8).value = "imported record"
+    worksheet.cell(row=2, column=9).value = "PARTIAL"
     stream = BytesIO()
     workbook.save(stream)
     stream.seek(0)
@@ -1573,8 +1684,8 @@ def test_evaluation_import_export_and_report_management(client):
     assert len(records) == 1
     record_id = records[0].id
 
-    worksheet.cell(row=2, column=7).value = "updated record"
-    worksheet.cell(row=2, column=8).value = "NON_COMPLIANT"
+    worksheet.cell(row=2, column=8).value = "updated record"
+    worksheet.cell(row=2, column=9).value = "NON_COMPLIANT"
     stream = BytesIO()
     workbook.save(stream)
     stream.seek(0)
@@ -1600,9 +1711,10 @@ def test_evaluation_import_export_and_report_management(client):
     export_response = client.get(f"/api/v1/projects/{project_id}/evaluation/export")
     assert export_response.status_code == 200
     exported = load_workbook(BytesIO(export_response.data)).active
-    assert exported.max_column == 8
-    assert exported.cell(row=2, column=7).value == "updated record"
-    assert exported.cell(row=2, column=8).value == "NON_COMPLIANT"
+    assert exported.max_column == 9
+    assert exported.cell(row=2, column=3).value == "AQGL001"
+    assert exported.cell(row=2, column=8).value == "updated record"
+    assert exported.cell(row=2, column=9).value == "NON_COMPLIANT"
     unwrap(
         client.post(
             f"/api/v1/projects/{project_id}/survey/business-systems",
@@ -1667,8 +1779,8 @@ def test_evaluation_import_resolves_blank_item_id_by_context(client):
     expected_item_ids = {worksheet.cell(row=row_no, column=1).value for row_no in duplicate_rows}
     for row_no in duplicate_rows:
         worksheet.cell(row=row_no, column=1).value = None
-        worksheet.cell(row=row_no, column=7).value = f"legacy import row {row_no}"
-        worksheet.cell(row=row_no, column=8).value = "PARTIAL"
+        worksheet.cell(row=row_no, column=8).value = f"legacy import row {row_no}"
+        worksheet.cell(row=row_no, column=9).value = "PARTIAL"
 
     stream = BytesIO()
     workbook.save(stream)
@@ -1700,8 +1812,8 @@ def test_evaluation_import_reports_invalid_result_and_preserves_records(client):
     template_response = client.get(f"/api/v1/projects/{project_id}/evaluation/export-template")
     workbook = load_workbook(BytesIO(template_response.data))
     worksheet = workbook.active
-    worksheet.cell(row=2, column=7).value = "original record"
-    worksheet.cell(row=2, column=8).value = "PARTIAL"
+    worksheet.cell(row=2, column=8).value = "original record"
+    worksheet.cell(row=2, column=9).value = "PARTIAL"
 
     stream = BytesIO()
     workbook.save(stream)
@@ -1715,8 +1827,8 @@ def test_evaluation_import_reports_invalid_result_and_preserves_records(client):
     )
     assert imported["importedCount"] == 1
 
-    worksheet.cell(row=2, column=7).value = "should not overwrite"
-    worksheet.cell(row=2, column=8).value = "错误符合情况"
+    worksheet.cell(row=2, column=8).value = "should not overwrite"
+    worksheet.cell(row=2, column=9).value = "错误符合情况"
     stream = BytesIO()
     workbook.save(stream)
     stream.seek(0)
@@ -1754,8 +1866,8 @@ def test_evaluation_import_reports_readonly_column_changes_and_preserves_records
     template_response = client.get(f"/api/v1/projects/{project_id}/evaluation/export-template")
     workbook = load_workbook(BytesIO(template_response.data))
     worksheet = workbook.active
-    worksheet.cell(row=2, column=7).value = "original record"
-    worksheet.cell(row=2, column=8).value = "PARTIAL"
+    worksheet.cell(row=2, column=8).value = "original record"
+    worksheet.cell(row=2, column=9).value = "PARTIAL"
     stream = BytesIO()
     workbook.save(stream)
     stream.seek(0)
@@ -1769,12 +1881,13 @@ def test_evaluation_import_reports_readonly_column_changes_and_preserves_records
     assert imported["importedCount"] == 1
 
     worksheet.cell(row=2, column=2).value = "edited item code"
-    worksheet.cell(row=2, column=3).value = "edited sheet"
-    worksheet.cell(row=2, column=4).value = "edited category"
-    worksheet.cell(row=2, column=5).value = "edited subcategory"
-    worksheet.cell(row=2, column=6).value = "edited check point"
-    worksheet.cell(row=2, column=7).value = "should not overwrite"
-    worksheet.cell(row=2, column=8).value = "NON_COMPLIANT"
+    worksheet.cell(row=2, column=3).value = "edited assessment item id"
+    worksheet.cell(row=2, column=4).value = "edited sheet"
+    worksheet.cell(row=2, column=5).value = "edited category"
+    worksheet.cell(row=2, column=6).value = "edited subcategory"
+    worksheet.cell(row=2, column=7).value = "edited check point"
+    worksheet.cell(row=2, column=8).value = "should not overwrite"
+    worksheet.cell(row=2, column=9).value = "NON_COMPLIANT"
     stream = BytesIO()
     workbook.save(stream)
     stream.seek(0)
@@ -1787,9 +1900,10 @@ def test_evaluation_import_reports_readonly_column_changes_and_preserves_records
     )
 
     assert failed["importedCount"] == 0
-    assert failed["failedCount"] == 5
+    assert failed["failedCount"] == 6
     assert failed["errors"] == [
         {"rowNo": 2, "field": "检查项编号", "reason": "检查项编号与系统检查项不一致，请使用最新导出模板。"},
+        {"rowNo": 2, "field": "评估项ID", "reason": "评估项ID与系统检查项不一致，请使用最新导出模板。"},
         {"rowNo": 2, "field": "工作表", "reason": "工作表与系统检查项不一致，请使用最新导出模板。"},
         {"rowNo": 2, "field": "一级分类", "reason": "一级分类与系统检查项不一致，请使用最新导出模板。"},
         {"rowNo": 2, "field": "二级分类", "reason": "二级分类与系统检查项不一致，请使用最新导出模板。"},

@@ -123,7 +123,7 @@ def apply(project_id: str, risk_item_id: str, payload: dict | None = None) -> di
     payload = payload or {}
     session = SessionLocal()
     record = _get_risk_record(session, project_id, risk_item_id)
-    before = record.to_dict()
+    target_records = _target_risk_records(session, project_id, risk_item_id, payload)
 
     # 第二步：读取前端传回的建议；如果没有传建议，则现场重新生成一次建议。
     # request_json 会把前端 camelCase 转为 snake_case，但服务内部实时生成的建议仍是 camelCase，
@@ -170,55 +170,33 @@ def apply(project_id: str, risk_item_id: str, payload: dict | None = None) -> di
         _payload_value(suggestion_payload, "harm_impact_object", "harmImpactObject"),
         _payload_value(suggestion_payload, "confidence"),
     )
-    record.harm_level = harm_level
-    record.harm_description = _payload_value(suggestion_payload, "harm_description", "harmDescription")
-    record.harm_impact_object = _payload_value(suggestion_payload, "harm_impact_object", "harmImpactObject")
-    record.harm_example = _payload_value(suggestion_payload, "harm_example", "harmExample")
-    record.harm_analysis_trace = _payload_value(suggestion_payload, "harm_analysis_trace", "harmAnalysisTrace") or _trace_from_payload(suggestion_payload)
-    record.harm_analysis_confidence = _float_or_default(_payload_value(suggestion_payload, "confidence"), None)
-    record.harm_analysis_input_hash = current_hash
-
-    # 第五步：如果风险发生可能性已存在，则通过项目风险矩阵同步重算风险等级。
-    if record.possibility_level not in EMPTY_LEVELS:
-        calculated_risk = risk_level_from_project_matrix(session, project, record.harm_level, record.possibility_level)
-        if calculated_risk:
-            record.risk_level = calculated_risk
-            logger.info(
-                "应用危害程度后已重算风险等级。project_id=%s risk_item_id=%s possibility_level=%s risk_level=%s",
-                project_id,
-                risk_item_id,
-                record.possibility_level,
-                calculated_risk,
-            )
-        else:
-            logger.warning(
-                "应用危害程度后未能通过风险矩阵重算风险等级。project_id=%s risk_item_id=%s harm_level=%s possibility_level=%s",
-                project_id,
-                risk_item_id,
-                record.harm_level,
-                record.possibility_level,
-            )
-    else:
-        record.risk_level = None
-        logger.info("风险发生可能性为空，应用危害程度后清空风险等级。project_id=%s risk_item_id=%s", project_id, risk_item_id)
-    record.manual_adjusted = True
-    # 记录审计日志，便于后续追踪“谁在什么输入下确认了哪条危害程度建议”。
-    audit("HARM_ANALYSIS_APPLY", "ProjectRiskSummaryRecord", record.id, before=before, after=record.to_dict())
-    logger.info("危害程度字段写入数据库前审计记录已生成。project_id=%s risk_item_id=%s", project_id, risk_item_id)
+    for target_record in target_records:
+        before = target_record.to_dict()
+        _apply_harm_confirmation(session, project, target_record, suggestion_payload, harm_level, current_hash)
+        target_record.manual_adjusted = True
+        # 记录审计日志，便于后续追踪“谁在什么输入下确认了哪条危害程度建议”。
+        audit("HARM_ANALYSIS_APPLY", "ProjectRiskSummaryRecord", target_record.id, before=before, after=target_record.to_dict())
+    logger.info(
+        "危害程度字段写入数据库前审计记录已生成。project_id=%s risk_item_id=%s target_count=%s",
+        project_id,
+        risk_item_id,
+        len(target_records),
+    )
     session.commit()
     logger.info("危害程度字段已提交到数据库。project_id=%s risk_item_id=%s", project_id, risk_item_id)
 
     from app.services.risk_service import serialize_risk_item
 
     # 返回风险清单统一序列化结果，保证前端看到的是正式风险行的最新状态。
+    primary_record = _primary_target_record(target_records, risk_item_id)
     logger.info(
         "用户确认的风险危害程度建议应用完成。project_id=%s risk_item_id=%s harm_level=%s risk_level=%s",
         project_id,
         risk_item_id,
-        record.harm_level,
-        record.risk_level,
+        primary_record.harm_level,
+        primary_record.risk_level,
     )
-    return serialize_risk_item(record)
+    return serialize_risk_item(primary_record)
 
 
 def risk_level_from_project_matrix(session, project: Project, harm_level: str | None, possibility_level: str | None) -> str | None:
@@ -253,6 +231,50 @@ def risk_level_from_project_matrix(session, project: Project, harm_level: str | 
         risk_level,
     )
     return risk_level
+
+
+def _apply_harm_confirmation(
+    session,
+    project: Project,
+    record: ProjectRiskSummaryRecord,
+    suggestion_payload: dict,
+    harm_level: str,
+    input_hash: str,
+) -> None:
+    record.harm_level = harm_level
+    record.harm_description = _payload_value(suggestion_payload, "harm_description", "harmDescription")
+    record.harm_impact_object = _payload_value(suggestion_payload, "harm_impact_object", "harmImpactObject")
+    record.harm_example = _payload_value(suggestion_payload, "harm_example", "harmExample")
+    record.harm_analysis_trace = _payload_value(suggestion_payload, "harm_analysis_trace", "harmAnalysisTrace") or _trace_from_payload(suggestion_payload)
+    record.harm_analysis_confidence = _float_or_default(
+        _payload_value(suggestion_payload, "harm_analysis_confidence", "harmAnalysisConfidence", "confidence"),
+        None,
+    )
+    record.harm_analysis_input_hash = input_hash
+
+    # 第五步：如果风险发生可能性已存在，则通过项目风险矩阵同步重算风险等级。
+    if record.possibility_level not in EMPTY_LEVELS:
+        calculated_risk = risk_level_from_project_matrix(session, project, record.harm_level, record.possibility_level)
+        if calculated_risk:
+            record.risk_level = calculated_risk
+            logger.info(
+                "应用危害程度后已重算风险等级。project_id=%s risk_item_id=%s possibility_level=%s risk_level=%s",
+                project.id,
+                record.id,
+                record.possibility_level,
+                calculated_risk,
+            )
+        else:
+            logger.warning(
+                "应用危害程度后未能通过风险矩阵重算风险等级。project_id=%s risk_item_id=%s harm_level=%s possibility_level=%s",
+                project.id,
+                record.id,
+                record.harm_level,
+                record.possibility_level,
+            )
+    else:
+        record.risk_level = None
+        logger.info("风险发生可能性为空，应用危害程度后清空风险等级。project_id=%s risk_item_id=%s", project.id, record.id)
 
 
 def _build_suggestion(session, project: Project, record: ProjectRiskSummaryRecord, payload: dict) -> dict:
@@ -291,11 +313,11 @@ def _build_suggestion(session, project: Project, record: ProjectRiskSummaryRecor
     harm_level = _harm_level(rule_config, protection_level)
     harm_level_name = _harm_level_name(harm_level)
 
-    # 第六步：读取最终危害程度等级对应的描述、影响对象和示例，用于前端形成闭环展示。
+    # 第六步：读取等级示例，并结合当前风险行和模型结论生成逐条风险专属的危害程度分析。
     level_rule = _level_rule(session, project.harm_model_id, harm_level)
     object_name = _object_name(rule_config, impacted_object)
     damage_name = _damage_name(rule_config, damage_degree)
-    harm_description = level_rule.get("description") if level_rule else None
+    harm_description = _specific_harm_analysis(record, model_output, object_name, damage_name, harm_level_name)
     harm_example = _damage_example(rule_config, impacted_object, damage_degree) or (level_rule.get("example") if level_rule else None)
     needs_review = bool(model_output.get("needs_manual_review")) or bool(conflicts) or not harm_level
     if conflicts:
@@ -397,6 +419,60 @@ def _get_risk_record(session, project_id: str, risk_item_id: str) -> ProjectRisk
     return record
 
 
+def _target_risk_records(session, project_id: str, risk_item_id: str, payload: dict) -> list[ProjectRiskSummaryRecord]:
+    target_ids = _merged_target_ids(payload)
+    if not target_ids:
+        return [_get_risk_record(session, project_id, risk_item_id)]
+
+    rows = (
+        session.query(ProjectRiskSummaryRecord)
+        .filter(
+            ProjectRiskSummaryRecord.id.in_(target_ids),
+            ProjectRiskSummaryRecord.project_id == project_id,
+            ProjectRiskSummaryRecord.deleted.is_(False),
+            ProjectRiskSummaryRecord.current.is_(True),
+        )
+        .all()
+    )
+    rows_by_id = {row.id: row for row in rows}
+    if len(rows_by_id) != len(target_ids):
+        logger.warning(
+            "合并行危害程度应用包含无效源记录。project_id=%s risk_item_id=%s merged_ids=%s",
+            project_id,
+            risk_item_id,
+            target_ids,
+        )
+        raise NotFoundError("未找到当前有效的风险汇总记录。")
+    return [rows_by_id[target_id] for target_id in target_ids]
+
+
+def _merged_target_ids(payload: dict) -> list[str]:
+    raw_ids = payload.get("merged_risk_record_ids", payload.get("mergedRiskRecordIds"))
+    if raw_ids in (None, "", []):
+        return []
+    if not isinstance(raw_ids, (list, tuple, set)):
+        raise BusinessError("INVALID_MERGED_RISK_RECORD_IDS", "mergedRiskRecordIds must be an array.")
+    target_ids = []
+    seen = set()
+    for raw_id in raw_ids:
+        target_id = _clean_identifier(raw_id)
+        if target_id and target_id not in seen:
+            seen.add(target_id)
+            target_ids.append(target_id)
+    return target_ids
+
+
+def _primary_target_record(records: list[ProjectRiskSummaryRecord], risk_item_id: str) -> ProjectRiskSummaryRecord:
+    for record in records:
+        if record.id == risk_item_id:
+            return record
+    return records[0]
+
+
+def _clean_identifier(value: Any) -> str:
+    return " ".join(str(value or "").split())
+
+
 def _rule_config(session, harm_model_id: str | None) -> dict:
     """读取项目选择的危害模型规则；如果不存在或未配置规则，则使用内置电力行业规则。"""
     if harm_model_id:
@@ -481,6 +557,12 @@ def _normalize_model_output(value: dict) -> dict:
         "impacted_object": _normalize_level(value.get("impacted_object") or value.get("impactedObject")),
         "damage_degree": _normalize_level(value.get("damage_degree") or value.get("damageDegree")),
         "reason": value.get("reason"),
+        "harm_analysis": (
+            value.get("harm_analysis")
+            or value.get("harmAnalysis")
+            or value.get("harm_description")
+            or value.get("harmDescription")
+        ),
         "evidence": value.get("evidence") or [],
         "confidence": _float_or_default(value.get("confidence"), DEFAULT_CONFIDENCE),
         "needs_manual_review": bool(value.get("needs_manual_review") or value.get("needsManualReview")),
@@ -536,11 +618,106 @@ def _heuristic_model_output(project: Project, record: ProjectRiskSummaryRecord, 
     return {
         "impacted_object": impact_object,
         "damage_degree": damage_degree,
-        "reason": "基于风险类型、风险描述、风险源描述和项目系统类别进行规则化辅助判断。",
+        "reason": _heuristic_reason(record, rule_config, impact_object, damage_degree),
         "evidence": _evidence(record),
         "confidence": DEFAULT_CONFIDENCE,
         "needs_manual_review": False,
     }
+
+
+def _specific_harm_analysis(
+    record: ProjectRiskSummaryRecord,
+    model_output: dict,
+    object_name: str,
+    damage_name: str,
+    harm_level_name: str | None,
+) -> str:
+    """优先使用模型的逐条分析；旧模型未返回时根据本行事实生成专属分析。"""
+    model_analysis = " ".join(str(model_output.get("harm_analysis") or "").split())
+    if model_analysis:
+        return model_analysis if len(model_analysis) <= 500 else model_analysis[:500].rstrip() + "…"
+
+    problem = _first_analysis_fragment(
+        record.risk_source_description,
+        record.evaluation_record,
+        record.check_point,
+        record.risk_description,
+        max_length=100,
+    )
+    consequence = _analysis_fragment(record.risk_description, 120)
+    related_data = _analysis_fragment(record.related_data, 100) if _has_text(record.related_data) else None
+    related_activities = _analysis_fragment(_joined_text(record.related_activities), 80) if _has_text(record.related_activities) else None
+    reason = _analysis_fragment(model_output.get("reason"), 160)
+
+    sentences = []
+    if problem:
+        sentences.append(f"当前风险行的具体问题是“{problem}”。")
+    else:
+        sentences.append("当前风险行尚未提供可定位到具体控制缺陷的现场事实。")
+
+    if related_data and related_activities:
+        sentences.append(f"该问题涉及“{related_data}”在“{related_activities}”环节的处理。")
+    elif related_data:
+        sentences.append(f"该问题涉及“{related_data}”，但尚未明确具体数据处理活动。")
+    elif related_activities:
+        sentences.append(f"该问题发生在“{related_activities}”环节，但尚未明确涉及的数据及类型、级别。")
+    else:
+        sentences.append("涉及的数据及类型、级别和数据处理活动尚未明确，当前结论需结合现有风险事实审慎判断。")
+
+    if consequence and consequence != problem:
+        sentences.append(f"若该问题未得到控制，可能出现“{consequence}”所述的数据安全后果。")
+    if reason:
+        sentences.append(f"分析依据为：{reason.rstrip('。')}。")
+    level_text = harm_level_name or "待复核"
+    sentences.append(f"综合判断，风险优先影响{object_name}，侵害程度为{damage_name}，本条风险的危害程度为{level_text}。")
+    return "".join(sentences)
+
+
+def _heuristic_reason(record: ProjectRiskSummaryRecord, rule_config: dict, impact_object: str, damage_degree: str) -> str:
+    """用当前风险行事实生成规则兜底原因，避免所有风险共用同一句说明。"""
+    fact = _first_analysis_fragment(
+        record.risk_source_description,
+        record.evaluation_record,
+        record.risk_description,
+        record.check_point,
+        max_length=100,
+    ) or "未提供具体现场事实"
+    scope_parts = []
+    if _has_text(record.related_data):
+        scope_parts.append(f"涉及数据为{_analysis_fragment(record.related_data, 80)}")
+    if _has_text(record.related_activities):
+        scope_parts.append(f"处理活动为{_analysis_fragment(_joined_text(record.related_activities), 60)}")
+    scope = f"，{'、'.join(scope_parts)}" if scope_parts else "，涉及数据和处理活动尚未明确"
+    return (
+        f"根据本行事实“{fact}”{scope}，结合风险类型及可能造成的泄露、丢失、篡改或业务中断后果，"
+        f"规则判断优先受影响对象为{_object_name(rule_config, impact_object)}，侵害程度为{_damage_name(rule_config, damage_degree)}"
+    )
+
+
+def _first_analysis_fragment(*values: Any, max_length: int) -> str | None:
+    for value in values:
+        if _has_text(value):
+            return _analysis_fragment(value, max_length)
+    return None
+
+
+def _analysis_fragment(value: Any, max_length: int) -> str:
+    text = " ".join(str(value or "").split()).strip("；;。 ")
+    if len(text) <= max_length:
+        return text
+    return text[:max_length].rstrip() + "…"
+
+
+def _has_text(value: Any) -> bool:
+    if isinstance(value, (list, tuple, set)):
+        return any(_has_text(item) for item in value)
+    return str(value or "").strip() not in {"", "-"}
+
+
+def _joined_text(value: Any) -> str:
+    if isinstance(value, (list, tuple, set)):
+        return "、".join(str(item).strip() for item in value if _has_text(item))
+    return str(value or "").strip()
 
 
 def _rule_conflicts(rule_config: dict, system_category: str, impact_object: str, damage_degree: str) -> list[str]:
@@ -674,6 +851,8 @@ def _analysis_input_hash(project: Project, record: ProjectRiskSummaryRecord) -> 
         "evaluationRecord": record.evaluation_record,
         "riskDescription": record.risk_description,
         "riskSourceDescription": record.risk_source_description,
+        "relatedData": record.related_data,
+        "relatedActivities": record.related_activities or [],
     }
     raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str)
     digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()
@@ -694,6 +873,8 @@ def _analysis_text(project: Project, record: ProjectRiskSummaryRecord) -> str:
             record.evaluation_record or "",
             record.risk_description or "",
             record.risk_source_description or "",
+            record.related_data or "",
+            _joined_text(record.related_activities),
         ]
     )
     text = " ".join(parts)
@@ -718,6 +899,10 @@ def _evidence(record: ProjectRiskSummaryRecord) -> list[str]:
         evidence.append(f"风险描述：{record.risk_description}")
     if record.risk_source_description:
         evidence.append(f"风险源描述：{record.risk_source_description}")
+    if _has_text(record.related_data):
+        evidence.append(f"涉及的数据及类型、级别：{record.related_data}")
+    if _has_text(record.related_activities):
+        evidence.append(f"涉及的数据处理活动：{_joined_text(record.related_activities)}")
     logger.info("已提取危害程度判定依据。risk_item_id=%s evidence_count=%s", record.id, len(evidence))
     return evidence
 
@@ -742,6 +927,10 @@ def _step2_basis(record: ProjectRiskSummaryRecord, system_category_name: str, ev
         basis.append(f"风险描述：{record.risk_description}")
     if record.risk_source_description:
         basis.append(f"风险源描述：{record.risk_source_description}")
+    if _has_text(record.related_data):
+        basis.append(f"涉及的数据及类型、级别：{record.related_data}")
+    if _has_text(record.related_activities):
+        basis.append(f"涉及的数据处理活动：{_joined_text(record.related_activities)}")
     if record.assessment_category or record.assessment_subcategory:
         basis.append(f"现场测评分类：{record.assessment_category or '-'} / {record.assessment_subcategory or '-'}")
     if record.check_point:

@@ -950,6 +950,7 @@
                                         <th>风险类型</th>
                                         <th>风险描述</th>
                                         <th>风险危害程度</th>
+                                        <th>危害程度分析</th>
                                         <th>风险发生的可能性</th>
                                         <th>风险源描述</th>
                                         <th>风险等级</th>
@@ -964,11 +965,12 @@
                                         <td>数据泄露风险</td>
                                         <td>由于数据窃取、爬取、...</td>
                                         <td>较高</td>
+                                        <td>未制定数据安全总体策略，业务数据在收集、存储和使用环节缺少统一控制要求，可能造成控制措施遗漏并扩大数据泄露影响范围。</td>
                                         <td>中</td>
                                         <td>未制定数据安全总体策...</td>
                                         <td>低安全风险</td>
-                                        <td>111</td>
-                                        <td>111</td>
+                                        <td>业务数据（重要级）</td>
+                                        <td>收集、存储、使用和加工</td>
                                         <td><span class="action-btn" onclick="openListEditModal(0)">修改</span></td>
                                     </tr>
                                     <tr>
@@ -976,11 +978,12 @@
                                         <td>数据滥用风险</td>
                                         <td>由于缺乏授权访问控制...</td>
                                         <td>较高</td>
+                                        <td>访问授权规则缺失，用户信息在存储和使用环节可能被超权限查询或导出，进而侵害个人信息主体合法权益。</td>
                                         <td>中</td>
                                         <td>未制定数据安全总体策...</td>
                                         <td>低安全风险</td>
-                                        <td>111</td>
-                                        <td>111</td>
+                                        <td>个人信息（敏感级）</td>
+                                        <td>存储、使用和加工</td>
                                         <td><span class="action-btn" onclick="openListEditModal(1)">修改</span></td>
                                     </tr>
                                     <tr>
@@ -988,11 +991,12 @@
                                         <td>数据处理缺乏正当性</td>
                                         <td>违反正当性原则，数据...</td>
                                         <td>较高</td>
+                                        <td>数据处理目的和合法性依据未明确，个人信息在收集、使用环节可能被超目的处理，引发合规处罚及用户权益损害。</td>
                                         <td>中</td>
                                         <td>未制定数据安全总体策...</td>
                                         <td>低安全风险</td>
-                                        <td>111</td>
-                                        <td>111</td>
+                                        <td>个人信息（敏感级）</td>
+                                        <td>收集、使用和加工</td>
                                         <td><span class="action-btn" onclick="openListEditModal(2)">修改</span></td>
                                     </tr>
                                     <tr>
@@ -1000,11 +1004,12 @@
                                         <td>数据泄露风险</td>
                                         <td>由于数据窃取、爬取、...</td>
                                         <td>较高</td>
+                                        <td>数据安全管理制度和操作流程缺失，重要业务数据在传输、存储环节缺少责任和控制边界，泄露后难以及时发现和处置。</td>
                                         <td>中</td>
                                         <td>未制定数据安全管理工...</td>
                                         <td>低安全风险</td>
-                                        <td>111</td>
-                                        <td>111</td>
+                                        <td>重要业务数据（重要级）</td>
+                                        <td>传输、存储</td>
                                         <td><span class="action-btn" onclick="openListEditModal(3)">修改</span></td>
                                     </tr>
                                     <tr>
@@ -1012,11 +1017,12 @@
                                         <td>数据泄露风险</td>
                                         <td>由于数据窃取、爬取、...</td>
                                         <td>较高</td>
+                                        <td>安全管理流程未覆盖账号和权限复核，生产数据在使用和加工环节可能持续暴露于无关人员，增加批量泄露风险。</td>
                                         <td>中</td>
                                         <td>未制定数据安全管理工...</td>
                                         <td>低安全风险</td>
-                                        <td>111</td>
-                                        <td>111</td>
+                                        <td>生产数据（重要级）</td>
+                                        <td>使用和加工</td>
                                         <td><span class="action-btn" onclick="openListEditModal(4)">修改</span></td>
                                     </tr>
                                     <tr>
@@ -1024,11 +1030,12 @@
                                         <td>数据丢失风险</td>
                                         <td>由于数据过载、软硬件...</td>
                                         <td>较高</td>
+                                        <td>数据备份和恢复要求未形成制度，核心业务数据在存储、删除环节发生故障或误操作时可能无法恢复并导致业务中断。</td>
                                         <td>中</td>
                                         <td>未制定数据安全管理工...</td>
                                         <td>低安全风险</td>
-                                        <td>111</td>
-                                        <td>111</td>
+                                        <td>核心业务数据（核心级）</td>
+                                        <td>存储、删除</td>
                                         <td><span class="action-btn" onclick="openListEditModal(5)">修改</span></td>
                                     </tr>
                                     <tr>
@@ -1036,11 +1043,12 @@
                                         <td>数据滥用风险</td>
                                         <td>由于缺乏授权访问控制...</td>
                                         <td>较高</td>
+                                        <td>数据使用审批和操作留痕要求不完整，业务数据在使用和加工环节可能被内部人员超范围调用，且事后难以追溯。</td>
                                         <td>中</td>
                                         <td>未制定详细的数据安全...</td>
                                         <td>低安全风险</td>
-                                        <td>111</td>
-                                        <td>111</td>
+                                        <td>业务数据（重要级）</td>
+                                        <td>使用和加工</td>
                                         <td><span class="action-btn" onclick="openListEditModal(6)">修改</span></td>
                                     </tr>
                                     <tr>
@@ -1048,11 +1056,12 @@
                                         <td>数据滥用风险</td>
                                         <td>由于数据窃取、爬取、...</td>
                                         <td>较高</td>
+                                        <td>安全制度未明确反爬取和批量导出控制，客户数据在提供、公开环节可能被自动化获取，造成规模化泄露。</td>
                                         <td>中</td>
                                         <td>未制定安全制度体系中...</td>
                                         <td>低安全风险</td>
-                                        <td>111</td>
-                                        <td>111</td>
+                                        <td>客户数据（敏感级）</td>
+                                        <td>提供、公开</td>
                                         <td><span class="action-btn" onclick="openListEditModal(7)">修改</span></td>
                                     </tr>
                                     <tr>
@@ -1060,11 +1069,12 @@
                                         <td>数据泄露风险</td>
                                         <td>由于数据窃取、爬取、...</td>
                                         <td>较高</td>
+                                        <td>制度体系未规定敏感数据传输保护要求，重要数据在传输环节可能被截获或篡改，影响数据保密性和业务决策可靠性。</td>
                                         <td>中</td>
                                         <td>数据安全制度体系中，...</td>
                                         <td>低安全风险</td>
-                                        <td>111</td>
-                                        <td>111</td>
+                                        <td>重要数据（重要级）</td>
+                                        <td>传输</td>
                                         <td><span class="action-btn" onclick="openListEditModal(8)">修改</span></td>
                                     </tr>
                                     <tr>
@@ -1072,11 +1082,12 @@
                                         <td>数据滥用风险</td>
                                         <td>由于缺乏授权访问控制...</td>
                                         <td>较高</td>
+                                        <td>数据共享授权边界不清，客户信息在提供环节可能被超范围交付第三方，导致数据失控和主体权益受损。</td>
                                         <td>中</td>
                                         <td>数据安全制度体系中，...</td>
                                         <td>低安全风险</td>
-                                        <td>111</td>
-                                        <td>111</td>
+                                        <td>客户信息（敏感级）</td>
+                                        <td>提供</td>
                                         <td><span class="action-btn" onclick="openListEditModal(9)">修改</span></td>
                                     </tr>
                                     <tr>
@@ -1084,11 +1095,12 @@
                                         <td>数据处理缺乏正当性</td>
                                         <td>违反正当性原则，数据...</td>
                                         <td>较高</td>
+                                        <td>处理规则未落实最小必要原则，用户行为数据在收集、使用环节可能被用于未告知目的，形成违法违规处理风险。</td>
                                         <td>中</td>
                                         <td>数据安全制度体系中，...</td>
                                         <td>低安全风险</td>
-                                        <td>111</td>
-                                        <td>111</td>
+                                        <td>用户行为数据（一般级）</td>
+                                        <td>收集、使用和加工</td>
                                         <td><span class="action-btn" onclick="openListEditModal(10)">修改</span></td>
                                     </tr>
                                     <tr>
@@ -1096,11 +1108,12 @@
                                         <td>数据泄露风险</td>
                                         <td>由于数据窃取、爬取、...</td>
                                         <td>较高</td>
+                                        <td>关键岗位数据安全职责不清，重要数据在存储和使用环节出现异常访问时可能无人及时处置，扩大泄露和业务影响。</td>
                                         <td>中</td>
                                         <td>关键岗位的数据安全管...</td>
                                         <td>低安全风险</td>
-                                        <td>111</td>
-                                        <td>111</td>
+                                        <td>重要数据（重要级）</td>
+                                        <td>存储、使用和加工</td>
                                         <td><span class="action-btn" onclick="openListEditModal(11)">修改</span></td>
                                     </tr>
                                 </tbody>
@@ -1341,18 +1354,18 @@
         }
 
         const riskListData = [
-            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全总体策略、方针、目标和原则，缺乏对数据安全的全面指导和规范。', dataInfo: '111', dataActivity: '111' },
-            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全总体策略、方针、目标和原则，缺乏对数据安全的全面指导和规范。', dataInfo: '111', dataActivity: '111' },
-            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全总体策略、方针、目标和原则，缺乏对数据安全的全面指导和规范。', dataInfo: '111', dataActivity: '111' },
-            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全管理工作相关制度和流程。', dataInfo: '111', dataActivity: '111' },
-            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全管理工作相关制度和流程。', dataInfo: '111', dataActivity: '111' },
-            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全管理工作相关制度和流程。', dataInfo: '111', dataActivity: '111' },
-            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定详细的数据安全管理制度和操作规范。', dataInfo: '111', dataActivity: '111' },
-            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定安全制度体系中的相关数据安全管理制度。', dataInfo: '111', dataActivity: '111' },
-            { hazardLevel: '较高', probability: '中', sourceDesc: '数据安全制度体系中，相关数据安全管理制度不完善。', dataInfo: '111', dataActivity: '111' },
-            { hazardLevel: '较高', probability: '中', sourceDesc: '数据安全制度体系中，相关数据安全管理制度不完善。', dataInfo: '111', dataActivity: '111' },
-            { hazardLevel: '较高', probability: '中', sourceDesc: '数据安全制度体系中，相关数据安全管理制度不完善。', dataInfo: '111', dataActivity: '111' },
-            { hazardLevel: '较高', probability: '中', sourceDesc: '关键岗位的数据安全管理职责不明确。', dataInfo: '111', dataActivity: '111' }
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全总体策略、方针、目标和原则，缺乏对数据安全的全面指导和规范。', dataInfo: '业务数据（重要级）', dataActivity: '收集、存储、使用和加工' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全总体策略、方针、目标和原则，缺乏对数据安全的全面指导和规范。', dataInfo: '个人信息（敏感级）', dataActivity: '存储、使用和加工' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全总体策略、方针、目标和原则，缺乏对数据安全的全面指导和规范。', dataInfo: '个人信息（敏感级）', dataActivity: '收集、使用和加工' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全管理工作相关制度和流程。', dataInfo: '重要业务数据（重要级）', dataActivity: '传输、存储' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全管理工作相关制度和流程。', dataInfo: '生产数据（重要级）', dataActivity: '使用和加工' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定数据安全管理工作相关制度和流程。', dataInfo: '核心业务数据（核心级）', dataActivity: '存储、删除' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定详细的数据安全管理制度和操作规范。', dataInfo: '业务数据（重要级）', dataActivity: '使用和加工' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '未制定安全制度体系中的相关数据安全管理制度。', dataInfo: '客户数据（敏感级）', dataActivity: '提供、公开' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '数据安全制度体系中，相关数据安全管理制度不完善。', dataInfo: '重要数据（重要级）', dataActivity: '传输' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '数据安全制度体系中，相关数据安全管理制度不完善。', dataInfo: '客户信息（敏感级）', dataActivity: '提供' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '数据安全制度体系中，相关数据安全管理制度不完善。', dataInfo: '用户行为数据（一般级）', dataActivity: '收集、使用和加工' },
+            { hazardLevel: '较高', probability: '中', sourceDesc: '关键岗位的数据安全管理职责不明确。', dataInfo: '重要数据（重要级）', dataActivity: '存储、使用和加工' }
         ];
 
         let currentListEditIndex = -1;
@@ -1389,10 +1402,10 @@
             const rows = document.querySelectorAll('#risk-list-tab tbody tr');
             const row = rows[currentListEditIndex];
             row.cells[3].textContent = document.getElementById('hazard-level').value;
-            row.cells[4].textContent = document.getElementById('probability').value;
-            row.cells[5].textContent = document.getElementById('source-desc').value.substring(0, 15) + '...';
-            row.cells[7].textContent = document.getElementById('list-data-info').value;
-            row.cells[8].textContent = document.getElementById('list-data-activity').value;
+            row.cells[5].textContent = document.getElementById('probability').value;
+            row.cells[6].textContent = document.getElementById('source-desc').value.substring(0, 15) + '...';
+            row.cells[8].textContent = document.getElementById('list-data-info').value;
+            row.cells[9].textContent = document.getElementById('list-data-activity').value;
             
             closeListModal();
             alert('修改成功！');

@@ -38,13 +38,12 @@ from app.models import (
     ProjectBasicInfo,
     ProjectContact,
     ProjectReference,
-    ProjectRiskSummaryRecord,
     RiskMatrix,
     ScoreModel,
     ScoreModelRange,
     SecurityProtectionSurvey,
 )
-from app.services import file_service, llm_gateway_service, survey_service
+from app.services import file_service, llm_gateway_service, risk_service, survey_service
 from app.services.evaluation_service import calculate_project_score_snapshot
 
 
@@ -273,6 +272,12 @@ ACTIVITY_FLAT_DETAIL_KEYS = {
         "media_destruction",
     },
 }
+ACTIVITY_RELATED_DATA_FIELDS = {
+    "COLLECT": ("collection_data_scope",),
+    "PROVIDE": ("provided_personal_info_and_important_data", "provide_scope"),
+    "PUBLIC": ("public_data_types",),
+}
+ACTIVITY_DATA_DETAIL_LIMIT = 5
 MISSING_TEXT_MARKERS = ("尚未填写", "尚未配置", "未填写", "未上传")
 RESULT_NAMES = {
     "COMPLIANT": "符合",
@@ -342,6 +347,10 @@ def generate_document(session, project, template_path: str, selected_sections: l
     content_types = ET.fromstring(entries["[Content_Types].xml"])
     data = _load_report_data(session, project)
 
+    # 新版模板不再展示三个按系统重复的四级标题。兼容仍保留旧标题的部署模板，
+    # 在填充批注前按完整标题文本移除，避免遗留“XX系统”占位内容。
+    _remove_obsolete_risk_system_headings(document)
+
     # 填充模板正文中由批注标注的段落：封面、评估背景/目的/依据、5.2 评估对象和范围、
     # 7.2 数据安全基本信息、8 风险分析与评价、9 风险处理等章节中的系统名称、单位名称、
     # 日期、处理活动、综合描述和风险统计等正文内容。
@@ -392,13 +401,13 @@ def generate_document(session, project, template_path: str, selected_sections: l
     _fill_table(tables[14], _risk_source_rows(data))
 
     # 填充 8.3.2 风险危害程度分析结果表。
-    _fill_table(tables[17], _harm_rows(data))
+    _fill_table(_find_table_by_headers(tables, "风险危害程度", "危害程度分析"), _harm_rows(data))
 
     # 填充 8.3.3 风险发生可能性等级表：评分模型中的等级与综合得分区间。
-    _fill_table(tables[19], _score_range_rows(data))
+    _fill_table(_find_table_by_headers(tables, "等级", "综合得分"), _score_range_rows(data))
 
     # 填充 8.3.3 评估项定性判定得分表：符合、基本符合、不符合对应分值。
-    _fill_table(tables[20], _score_result_rows(data))
+    _fill_table(_find_table_by_headers(tables, "评估项k定性判定", "评估项k的得分"), _score_result_rows(data))
 
     # 填充 8.3.3.1 综合得分及风险发生可能等级表：评估对象、综合得分和可能性等级。
     _fill_table(tables[21], _score_summary_rows(data))
@@ -408,10 +417,10 @@ def generate_document(session, project, template_path: str, selected_sections: l
 
     # 填充 8.3.5 数据安全风险清单表：风险类型、描述、危害程度、可能性、
     # 风险源、风险等级和涉及处理活动。
-    _fill_table(tables[23], _risk_rows(data))
+    _fill_table(_find_table_by_headers(tables, "风险发生的", "风险等级", "涉及的数据处理活动"), _risk_rows(data))
 
     # 填充 9 安全风险处理/整改建议表：风险信息和最终整改建议。
-    _fill_table(tables[24], _suggestion_rows(data))
+    _fill_table(_find_table_by_headers(tables, "风险源描述", "风险等级", "整改建议"), _suggestion_rows(data))
 
     # 图片单独写入 docx media，并在正文批注位置建立关系和绘图节点。
     media_entries = {}
@@ -562,16 +571,10 @@ def _load_report_data(session, project) -> dict:
     evaluation_records = _rows(session, EvaluationRecord, project_id)
     records_by_item = {row.item_id: row for row in evaluation_records}
     evaluation_rows = [(item, records_by_item.get(item.id)) for item in assessment_items]
-    risks = (
-        session.query(ProjectRiskSummaryRecord)
-        .filter(
-            ProjectRiskSummaryRecord.project_id == project_id,
-            ProjectRiskSummaryRecord.deleted.is_(False),
-            ProjectRiskSummaryRecord.current.is_(True),
-        )
-        .order_by(ProjectRiskSummaryRecord.created_at.asc())
-        .all()
-    )
+    risk_sources = risk_service.current_records(session, project_id)
+    # 与汇总分析页面保持同一展示口径：开启合并时，风险危害判定、风险清单和
+    # 整改建议均使用页面返回的合并行；风险源识别表仍保留风险源页的明细口径。
+    risks = risk_service.current_records_for_display(session, project)
     processing = session.query(ProcessingActivitySurvey).filter_by(project_id=project_id, deleted=False).first()
     security = session.query(SecurityProtectionSurvey).filter_by(project_id=project_id, deleted=False).first()
     score_model = session.get(ScoreModel, project.score_model_id) if project.score_model_id else None
@@ -603,6 +606,7 @@ def _load_report_data(session, project) -> dict:
         "assessment_items": assessment_items,
         "indicator_items": indicator_items,
         "evaluation_rows": evaluation_rows,
+        "risk_sources": risk_sources,
         "risks": risks,
         "processing": survey_service.processing_activity_payload(processing),
         "security": survey_service.security_protection_payload(security),
@@ -740,28 +744,21 @@ def _fill_paragraphs(document, data: dict) -> None:
         "61": target,
         "63": target,
         "64": target,
-        "65": target,
         "67": target,
-        "68": target,
-        "69": target,
         "75": target,
         "76": target,
-        "77": target,
-        "78": target,
-        "79": _number(data["score"]["score"]),
-        "80": POSSIBILITY_NAMES.get(data["score"]["possibilityLevel"], data["score"]["possibilityLevel"]),
+        "77": _number(data["score"]["score"]),
+        "78": POSSIBILITY_NAMES.get(data["score"]["possibilityLevel"], data["score"]["possibilityLevel"]),
         "82": target,
-        "83": target,
         "84": target,
-        "86": target,
-        "87": target,
-        "88": _evaluation_summary(data, "数据安全管理"),
-        "89": security_summary,
-        "90": _processing_summary(data),
+        "85": target,
+        "86": _evaluation_summary(data, "数据安全管理"),
+        "87": security_summary,
+        "88": _processing_summary(data),
+        "89": target,
+        "90": _risk_count_phrase(data),
         "91": target,
-        "92": _risk_count_phrase(data),
-        "93": target,
-        "94": target,
+        "92": target,
     }
     for comment_id, value in replacements.items():
         _replace_comment_text(document, comment_id, value)
@@ -908,6 +905,33 @@ def _fill_table(table, rows: list[list], keep_empty_row: bool = True) -> None:
         table.append(row)
 
 
+def _find_table_by_headers(tables: list, *required_headers: str):
+    """按表头文本定位动态表，避免模板内表格位置调整后填错表。"""
+    for table in tables:
+        rows = table.findall(_qn(W, "tr"))
+        if not rows:
+            continue
+        header_text = _element_text(rows[0]).replace("\n", "")
+        if all(header in header_text for header in required_headers):
+            return table
+    raise ValueError(f"Report template table not found: {', '.join(required_headers)}")
+
+
+def _remove_obsolete_risk_system_headings(document) -> None:
+    obsolete = {
+        "XX系统风险源识别",
+        "XX系统风险危害程度判定",
+        "XX系统安全风险清单",
+    }
+    parent_map = {child: parent for parent in document.iter() for child in parent}
+    for paragraph in list(document.iter(_qn(W, "p"))):
+        if _element_text(paragraph).strip() not in obsolete:
+            continue
+        parent = parent_map.get(paragraph)
+        if parent is not None:
+            parent.remove(paragraph)
+
+
 def _fill_risk_matrix_table(table, data: dict) -> None:
     matrix = data["risk_matrix"]
     rows = table.findall(_qn(W, "tr"))
@@ -995,13 +1019,19 @@ def _risk_source_rows(data: dict) -> list[list]:
             row.related_data,
             _activity_list_text(row.related_activities),
         ]
-        for index, row in enumerate(data["risks"], start=1)
+        for index, row in enumerate(data["risk_sources"], start=1)
     ]
 
 
 def _harm_rows(data: dict) -> list[list]:
     return [
-        [index, _list_text(row.risk_types), row.risk_description, HARM_NAMES.get(row.harm_level, row.harm_level)]
+        [
+            index,
+            _list_text(row.risk_types),
+            row.risk_description,
+            HARM_NAMES.get(row.harm_level, row.harm_level),
+            row.harm_description,
+        ]
         for index, row in enumerate(data["risks"], start=1)
     ]
 
@@ -2217,10 +2247,65 @@ def _processing_summary(data: dict) -> str:
 def _activity_narratives(data: dict) -> list[str]:
     rows = []
     for code in _activity_codes(data):
-        payload = _activity_detail(data["processing"], code)
-        description = _activity_detail_summary(payload)
-        rows.append(f"{_activity_name(code)}阶段：{description or '未填写具体处理情况'}。")
-    return rows or ["尚未填写数据处理活动具体情况。"]
+        activity_name = _activity_name(code)
+        related_data = _activity_related_data(data, code)
+        if not related_data:
+            continue
+        description = f"{activity_name}阶段：处理活动包括{activity_name}"
+        data_text = _activity_related_data_summary(data, code, related_data)
+        description += f"；涉及的数据包括{data_text}"
+        rows.append(f"{description}。")
+    return rows
+
+
+def _activity_related_data(data: dict, code: str) -> list[str]:
+    """提取阶段涉及的数据；优先使用该阶段专属字段，缺失时使用数据资产清单。"""
+    processing = data["processing"]
+    detail = _activity_detail(processing, code)
+    values = []
+    for field in ACTIVITY_RELATED_DATA_FIELDS.get(str(code or "").upper(), ()):
+        value = _payload_value(detail, field, _to_camel(field))
+        values.extend(_text_values(value))
+    if values:
+        return list(dict.fromkeys(values))
+
+    assets = [*data["assets"], *data["personal_info"], *data["important_data"], *data["core_data"]]
+    values.extend(_value(getattr(row, "data_name", None), "") for row in assets)
+    if not any(values):
+        for system in data["systems"]:
+            values.extend(_text_values(getattr(system, "data_scopes", None)))
+    return list(dict.fromkeys(value for value in values if value))
+
+
+def _activity_related_data_summary(data: dict, code: str, values: list[str]) -> str:
+    if not values:
+        return ""
+    if len(values) <= ACTIVITY_DATA_DETAIL_LIMIT:
+        return "、".join(values)
+
+    # 数据较多时只概括数据类别，避免在报告正文堆叠大量数据名称。
+    categories = []
+    if data["assets"]:
+        categories.append("一般数据")
+    if data["personal_info"]:
+        categories.append("个人信息")
+    if data["important_data"]:
+        categories.append("重要数据")
+    if data["core_data"]:
+        categories.append("核心数据")
+    if categories:
+        return f"{'、'.join(categories)}等共{len(values)}项数据"
+    return f"共{len(values)}项相关数据"
+
+
+def _text_values(value) -> list[str]:
+    if value in (None, "", [], {}):
+        return []
+    if isinstance(value, (list, tuple, set)):
+        raw_values = value
+    else:
+        raw_values = re.split(r"[、,，;；\r\n]+", str(value))
+    return [" ".join(str(item).split()) for item in raw_values if " ".join(str(item).split())]
 
 
 def _activity_detail_summary(payload: dict) -> str:

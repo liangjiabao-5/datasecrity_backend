@@ -286,8 +286,11 @@ def test_report_docx_fills_data_tables_images_and_removes_comments(client, app, 
         assert f"各级别数据安全风险危害程度示例描述如下表{harm_table_no}所示" in text
         if harm_table_no != "10":
             assert "各级别数据安全风险危害程度示例描述如下表10所示" not in text
-        assert "数据收集阶段：采集渠道为线上采集；收集目的为业务办理；收集频率为实时。" in text
-        assert "数据存储阶段：存储方式为数据库；存储期限为持续。" in text
+        assert "数据收集阶段：处理活动包括数据收集；涉及的数据包括数据资产1、数据资产2、手机号、重要数据、核心数据。" in text
+        assert "数据存储阶段：处理活动包括数据存储；涉及的数据包括数据资产1、数据资产2、手机号、重要数据、核心数据。" in text
+        assert "采集渠道为线上采集" not in text
+        assert "收集目的为业务办理" not in text
+        assert "存储方式为数据库" not in text
         assert "上传文件格式不支持插入 Word" not in text
         assert "已嵌入 Visio 文件：topology.vsdx" not in text
         assert "XX系统" not in text
@@ -435,7 +438,6 @@ def test_report_missing_content_is_marked_red(client):
                 missing_runs.append(run)
 
         assert missing_runs
-        assert any("尚未填写数据处理活动具体情况" in _element_text(run) for run in missing_runs)
         assert any(_element_text(run).strip() == "-" for run in missing_runs)
         for run in missing_runs:
             color = run.find(f"{{{W}}}rPr/{{{W}}}color")

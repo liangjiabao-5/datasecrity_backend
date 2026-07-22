@@ -49,6 +49,7 @@ SCORE_COUNT_KEYS = {
 EVALUATION_EXPORT_COLUMNS = [
     ("itemId", "检查项ID"),
     ("itemCode", "检查项编号"),
+    ("assessmentItemId", "评估项ID"),
     ("sheetName", "工作表"),
     ("category", "一级分类"),
     ("subcategory", "二级分类"),
@@ -71,6 +72,7 @@ RESULT_ALIASES = {
 IMPORT_FIELD_LABELS = {
     "item_id": "检查项ID",
     "item_code": "检查项编号",
+    "assessment_item_id": "评估项ID",
     "sheet_name": "工作表",
     "category": "一级分类",
     "subcategory": "二级分类",
@@ -82,6 +84,7 @@ IMPORT_FIELD_LABELS = {
 IMPORT_READONLY_FIELD_ATTRS = [
     ("item_id", "id"),
     ("item_code", "item_code"),
+    ("assessment_item_id", "assessment_item_id"),
     ("sheet_name", "sheet_name"),
     ("category", "category"),
     ("subcategory", "subcategory"),
@@ -154,7 +157,7 @@ def list_items(project_id: str, args) -> dict:
             ),
         ).filter(EvaluationRecord.evaluation_result.in_(result_filters))
 
-    query = query.order_by(ProjectAssessmentItem.sort_order.asc())
+    query = query.order_by(ProjectAssessmentItem.sort_order.asc(), ProjectAssessmentItem.id.asc())
     page_no, page_size = page_args()
     total = query.count()
     rows = query.offset((page_no - 1) * page_size).limit(page_size).all()
@@ -443,6 +446,8 @@ def _header_to_key(header: str) -> str | None:
         "检查项ID": "item_id",
         "itemCode": "item_code",
         "检查项编号": "item_code",
+        "assessmentItemId": "assessment_item_id",
+        "评估项ID": "assessment_item_id",
         "sheetName": "sheet_name",
         "工作表": "sheet_name",
         "category": "category",
@@ -476,6 +481,20 @@ def _item_from_import_row(session, project_id: str, row: tuple, column_map: dict
         if item:
             return item
     item_code = _import_text(_cell_value(row, column_map, "item_code"))
+    assessment_item_id = _import_text(_cell_value(row, column_map, "assessment_item_id"))
+    if assessment_item_id:
+        candidates = (
+            session.query(ProjectAssessmentItem)
+            .filter(
+                ProjectAssessmentItem.project_id == project_id,
+                ProjectAssessmentItem.assessment_item_id == assessment_item_id,
+                ProjectAssessmentItem.deleted.is_(False),
+            )
+            .all()
+        )
+        item = _match_item_by_import_context(candidates, row, column_map)
+        if item:
+            return item
     if item_code:
         candidates = (
             session.query(ProjectAssessmentItem)

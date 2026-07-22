@@ -1,6 +1,6 @@
 from sqlalchemy import or_
 
-from app.common.exceptions import BusinessError, NotFoundError
+from app.common.exceptions import NotFoundError
 from app.common.pagination import paginate_query
 from app.common.utils import require_fields
 from app.extensions import SessionLocal
@@ -76,13 +76,6 @@ def statistics() -> dict:
 def create_project(payload: dict) -> dict:
     require_fields(payload, ["project_name", "project_code", "assessment_org"])
     session = SessionLocal()
-    exists = (
-        session.query(Project)
-        .filter(Project.project_code == payload["project_code"], Project.deleted.is_(False))
-        .first()
-    )
-    if exists:
-        raise BusinessError("PROJECT_CODE_DUPLICATED", "Project code already exists.")
 
     project = Project(status="NOT_STARTED")
     for field in PROJECT_FIELDS:
@@ -97,15 +90,6 @@ def update_project(project_id: str, payload: dict) -> dict:
     session = SessionLocal()
     project = get_project(project_id)
     before = serialize_project(project)
-    new_code = payload.get("project_code")
-    if new_code and new_code != project.project_code:
-        duplicate = (
-            session.query(Project)
-            .filter(Project.project_code == new_code, Project.id != project.id, Project.deleted.is_(False))
-            .first()
-        )
-        if duplicate:
-            raise BusinessError("PROJECT_CODE_DUPLICATED", "Project code already exists.")
 
     for field in PROJECT_FIELDS:
         if field in payload:
@@ -152,6 +136,7 @@ def start_project(project_id: str) -> dict:
                     project_id=project.id,
                     template_item_id=item.id,
                     item_code=item.item_code,
+                    assessment_item_id=item.assessment_item_id,
                     sheet_name=item.sheet_name,
                     category=item.category,
                     subcategory=item.subcategory,

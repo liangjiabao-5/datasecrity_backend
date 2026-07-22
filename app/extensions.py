@@ -162,6 +162,15 @@ def _apply_lightweight_schema_updates(drop_legacy_tables: bool = False) -> None:
         ("other_security_threats", "TEXT"),
     ]
     additions = {
+        "project": [
+            ("risk_merge_enabled", "BOOLEAN DEFAULT FALSE NOT NULL"),
+        ],
+        "assessment_template_item": [
+            ("assessment_item_id", "VARCHAR(100)"),
+        ],
+        "project_assessment_item": [
+            ("assessment_item_id", "VARCHAR(100)"),
+        ],
         "risk_matrix": [("remark", "TEXT")],
         "personal_info_asset": [
             ("data_name", "VARCHAR(200)"),
@@ -186,6 +195,7 @@ def _apply_lightweight_schema_updates(drop_legacy_tables: bool = False) -> None:
         "project_risk_summary_record": [
             ("evaluation_item_id", "VARCHAR(64)"),
             ("source_item_code", "VARCHAR(100)"),
+            ("assessment_item_id", "VARCHAR(100)"),
             ("assessment_category", "VARCHAR(200)"),
             ("assessment_subcategory", "VARCHAR(200)"),
             ("check_point", "TEXT"),
@@ -194,6 +204,7 @@ def _apply_lightweight_schema_updates(drop_legacy_tables: bool = False) -> None:
             ("risk_types", "JSON"),
             ("risk_description", "TEXT"),
             ("risk_source_description", "TEXT"),
+            ("risk_source_type", "TEXT"),
             ("related_data", "TEXT"),
             ("related_activities", "JSON"),
             ("harm_level", "VARCHAR(40)"),
@@ -262,10 +273,13 @@ def _apply_lightweight_schema_updates(drop_legacy_tables: bool = False) -> None:
         "data_processor_basic_survey": ["payload"],
         "processing_activity_survey": ["payload"],
         "security_protection_survey": ["payload"],
+        "project_risk_summary_record": ["assessment_subitem"],
+        "risk_source_template": ["assessment_subitem"],
     }
     dropped_tables = ["risk_suggestion", "risk_item", "risk_source"]
 
     with _engine.begin() as connection:
+        _drop_project_code_unique_indexes(connection)
         for table, columns_to_add in additions.items():
             if table not in tables:
                 continue
@@ -294,6 +308,7 @@ def _apply_lightweight_schema_updates(drop_legacy_tables: bool = False) -> None:
         _normalize_text_list_column(connection, "important_data_asset", "processing_activity_types", ",")
         _normalize_text_list_column(connection, "core_data_asset", "processing_activity_types", ",")
         _normalize_text_list_column(connection, "data_processing_activity", "protection_measures", "、")
+        _backfill_assessment_item_ids(connection)
         for table, columns_to_drop in drop_columns.items():
             if table not in tables:
                 continue
@@ -304,6 +319,46 @@ def _apply_lightweight_schema_updates(drop_legacy_tables: bool = False) -> None:
         if drop_legacy_tables:
             for table in dropped_tables:
                 connection.execute(text(f"DROP TABLE IF EXISTS {table}"))
+
+
+def _drop_project_code_unique_indexes(connection) -> None:
+    """Allow multiple system projects to share the same business project code."""
+    inspector = inspect(_engine)
+    if "project" not in inspector.get_table_names():
+        return
+
+    preparer = connection.dialect.identifier_preparer
+    project_table = preparer.quote_identifier("project")
+    dropped_names = set()
+    for index in inspector.get_indexes("project"):
+        columns = index.get("column_names") or []
+        index_name = index.get("name")
+        if index.get("unique") and columns == ["project_code"] and index_name:
+            _drop_index(connection, project_table, preparer.quote_identifier(index_name))
+            dropped_names.add(index_name)
+
+    for constraint in inspector.get_unique_constraints("project"):
+        columns = constraint.get("column_names") or []
+        constraint_name = constraint.get("name")
+        if columns == ["project_code"] and constraint_name and constraint_name not in dropped_names:
+            _drop_index(connection, project_table, preparer.quote_identifier(constraint_name))
+            dropped_names.add(constraint_name)
+
+    refreshed = inspect(_engine)
+    has_project_code_index = any(
+        not index.get("unique")
+        and (index.get("column_names") or []) == ["project_code"]
+        for index in refreshed.get_indexes("project")
+    )
+    if not has_project_code_index and connection.dialect.name in {"mysql", "mariadb"}:
+        connection.execute(text(f"CREATE INDEX {preparer.quote_identifier('ix_project_project_code')} ON {project_table} (project_code)"))
+
+
+def _drop_index(connection, quoted_table: str, quoted_name: str) -> None:
+    if connection.dialect.name in {"mysql", "mariadb"}:
+        connection.execute(text(f"ALTER TABLE {quoted_table} DROP INDEX {quoted_name}"))
+    elif connection.dialect.name == "postgresql":
+        connection.execute(text(f"ALTER TABLE {quoted_table} DROP CONSTRAINT {quoted_name}"))
 
 
 def _modify_text_columns_if_supported(connection) -> None:
@@ -360,6 +415,55 @@ def _normalize_text_list_column(connection, table: str, column: str, separator: 
         normalized = _list_value_to_text(row[column], separator)
         if normalized != row[column]:
             connection.execute(text(f"UPDATE {table} SET {column} = :value WHERE id = :id"), {"value": normalized, "id": row["id"]})
+
+
+def _backfill_assessment_item_ids(connection) -> None:
+    tables = set(inspect(_engine).get_table_names())
+    required_tables = {"assessment_template_item", "project_assessment_item", "project_risk_summary_record"}
+    if not required_tables.issubset(tables):
+        return
+
+    columns_by_table = {
+        table: {column["name"] for column in inspect(_engine).get_columns(table)}
+        for table in required_tables
+    }
+    if {"id", "assessment_item_id"} <= columns_by_table["assessment_template_item"] and {
+        "template_item_id",
+        "assessment_item_id",
+    } <= columns_by_table["project_assessment_item"]:
+        connection.execute(
+            text(
+                """
+                UPDATE project_assessment_item
+                SET assessment_item_id = (
+                    SELECT assessment_template_item.assessment_item_id
+                    FROM assessment_template_item
+                    WHERE assessment_template_item.id = project_assessment_item.template_item_id
+                )
+                WHERE (assessment_item_id IS NULL OR assessment_item_id = '')
+                  AND template_item_id IS NOT NULL
+                """
+            )
+        )
+
+    if {"evaluation_item_id", "assessment_item_id"} <= columns_by_table["project_risk_summary_record"] and {
+        "id",
+        "assessment_item_id",
+    } <= columns_by_table["project_assessment_item"]:
+        connection.execute(
+            text(
+                """
+                UPDATE project_risk_summary_record
+                SET assessment_item_id = (
+                    SELECT project_assessment_item.assessment_item_id
+                    FROM project_assessment_item
+                    WHERE project_assessment_item.id = project_risk_summary_record.evaluation_item_id
+                )
+                WHERE (assessment_item_id IS NULL OR assessment_item_id = '')
+                  AND evaluation_item_id IS NOT NULL
+                """
+            )
+        )
 
 
 def _coerce_payload(value) -> dict:

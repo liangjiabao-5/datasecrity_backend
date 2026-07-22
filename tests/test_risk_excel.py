@@ -62,25 +62,31 @@ def test_risk_source_excel_export_and_import_updates_editable_fields(client):
     workbook = load_workbook(BytesIO(export_response.data))
     worksheet = workbook.active
 
-    assert [cell.value for cell in worksheet[1][:8]] == [
+    assert [cell.value for cell in worksheet[1][:11]] == [
         "序号",
-        "风险类型",
+        "评估项ID",
+        "评估子类",
         "检查要点",
         "评估结果",
         "风险描述",
         "风险源描述",
+        "风险源类型",
+        "风险类型",
         "涉及的数据及类型、级别",
         "涉及的数据处理活动",
     ]
-    assert worksheet.cell(row=1, column=9).value == "riskSourceId"
-    assert worksheet.column_dimensions["I"].hidden is True
-    assert worksheet.cell(row=2, column=9).value == risk_record_id
+    assert worksheet.cell(row=1, column=12).value == "riskSourceId"
+    assert worksheet.column_dimensions["L"].hidden is True
+    assert worksheet.cell(row=2, column=2).value == "AQGL001"
+    assert worksheet.cell(row=2, column=3).value == "数据安全制度体系"
+    assert worksheet.cell(row=2, column=8).value == "数据安全制度流程存在缺陷"
+    assert worksheet.cell(row=2, column=12).value == risk_record_id
 
-    worksheet.cell(row=2, column=2).value = "合规风险、技术风险"
-    worksheet.cell(row=2, column=5).value = "导入后的风险描述"
-    worksheet.cell(row=2, column=6).value = "导入后的风险源描述"
-    worksheet.cell(row=2, column=7).value = "重要数据/二级"
-    worksheet.cell(row=2, column=8).value = "收集\n存储；传输"
+    worksheet.cell(row=2, column=9).value = "合规风险、技术风险"
+    worksheet.cell(row=2, column=6).value = "导入后的风险描述"
+    worksheet.cell(row=2, column=7).value = "导入后的风险源描述"
+    worksheet.cell(row=2, column=10).value = "重要数据/二级"
+    worksheet.cell(row=2, column=11).value = "收集\n存储；传输"
 
     imported = unwrap(
         client.post(
@@ -113,8 +119,9 @@ def test_risk_item_excel_import_recalculates_risk_level_and_reports_duplicates(c
     workbook = load_workbook(BytesIO(export_response.data))
     worksheet = workbook.active
 
-    assert [cell.value for cell in worksheet[1][:9]] == [
+    assert [cell.value for cell in worksheet[1][:10]] == [
         "序号",
+        "评估项ID",
         "风险类型",
         "风险描述",
         "危害程度",
@@ -124,21 +131,22 @@ def test_risk_item_excel_import_recalculates_risk_level_and_reports_duplicates(c
         "涉及的数据及类型、级别",
         "涉及的数据处理活动",
     ]
-    assert worksheet.cell(row=1, column=10).value == "riskItemId"
-    assert worksheet.column_dimensions["J"].hidden is True
-    assert worksheet.cell(row=2, column=4).value == "很高"
-    assert worksheet.cell(row=2, column=5).value == "低"
-    assert worksheet.cell(row=2, column=7).value == "中安全风险"
+    assert worksheet.cell(row=1, column=11).value == "riskItemId"
+    assert worksheet.column_dimensions["K"].hidden is True
+    assert worksheet.cell(row=2, column=2).value == "AQGL001"
+    assert worksheet.cell(row=2, column=5).value == "很高"
+    assert worksheet.cell(row=2, column=6).value == "低"
+    assert worksheet.cell(row=2, column=8).value == "中安全风险"
 
-    worksheet.cell(row=2, column=2).value = "管理风险；技术风险"
-    worksheet.cell(row=2, column=3).value = "风险清单导入描述"
-    worksheet.cell(row=2, column=4).value = "很高"
-    worksheet.cell(row=2, column=5).value = "低"
-    worksheet.cell(row=2, column=6).value = "风险源导入描述"
-    worksheet.cell(row=2, column=7).value = "MAJOR"
-    worksheet.cell(row=2, column=8).value = "核心数据/三级"
-    worksheet.cell(row=2, column=9).value = "传输、删除"
-    worksheet.append([2, "重复行", "不应覆盖", "中", "高", "重复源", "LOW", "重复数据", "收集", risk_record_id])
+    worksheet.cell(row=2, column=3).value = "管理风险；技术风险"
+    worksheet.cell(row=2, column=4).value = "风险清单导入描述"
+    worksheet.cell(row=2, column=5).value = "很高"
+    worksheet.cell(row=2, column=6).value = "低"
+    worksheet.cell(row=2, column=7).value = "风险源导入描述"
+    worksheet.cell(row=2, column=8).value = "MAJOR"
+    worksheet.cell(row=2, column=9).value = "核心数据/三级"
+    worksheet.cell(row=2, column=10).value = "传输、删除"
+    worksheet.append([2, "AQGL001", "重复行", "不应覆盖", "中", "高", "重复源", "LOW", "重复数据", "收集", risk_record_id])
 
     imported = unwrap(
         client.post(
@@ -178,8 +186,8 @@ def test_risk_item_import_without_locator_returns_row_error(client):
     export_response = client.get(f"/api/v1/projects/{project_id}/risk-items/export")
     workbook = load_workbook(BytesIO(export_response.data))
     worksheet = workbook.active
-    worksheet.cell(row=2, column=3).value = "不应在无法定位时写入"
-    worksheet.cell(row=2, column=10).value = None
+    worksheet.cell(row=2, column=4).value = "不应在无法定位时写入"
+    worksheet.cell(row=2, column=11).value = None
 
     imported = unwrap(
         client.post(

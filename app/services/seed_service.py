@@ -1,7 +1,9 @@
 import hashlib
+import re
 from pathlib import Path
 
 from openpyxl import load_workbook
+from sqlalchemy import text
 
 from app.extensions import SessionLocal
 from app.models import (
@@ -9,6 +11,8 @@ from app.models import (
     AssessmentTemplateItem,
     HarmModel,
     HarmModelRule,
+    ProjectAssessmentItem,
+    ProjectRiskSummaryRecord,
     RemediationSuggestionTemplate,
     RiskMatrix,
     RiskSourceTemplate,
@@ -194,7 +198,8 @@ def seed_default_data(excel_path: str, risk_source_template_path: str | None = N
     session = SessionLocal()
     created = {"templates": 0, "items": 0, "models": 0, "riskSourceTemplates": 0}
 
-    if not session.get(AssessmentTemplate, "tpl-gb"):
+    template = session.get(AssessmentTemplate, "tpl-gb")
+    if not template:
         template = AssessmentTemplate(
             id="tpl-gb",
             template_name="国标测评模板",
@@ -205,8 +210,8 @@ def seed_default_data(excel_path: str, risk_source_template_path: str | None = N
         )
         session.add(template)
         created["templates"] += 1
-        created["items"] = _seed_template_items(session, template, excel_path)
-        template.item_count = created["items"]
+    created["items"] = _seed_template_items(session, template, excel_path)
+    template.item_count = created["items"]
 
     if not session.get(ScoreModel, "score-v1"):
         score_model = ScoreModel(
@@ -282,6 +287,8 @@ def seed_default_data(excel_path: str, risk_source_template_path: str | None = N
 
     _seed_auxiliary_knowledge(session)
     created["riskSourceTemplates"] = _seed_risk_source_templates(session, risk_source_template_path or _default_risk_source_template_path())
+    _backfill_existing_assessment_item_ids(session)
+    _backfill_existing_risk_template_fields(session)
     session.commit()
     return created
 
@@ -340,36 +347,263 @@ def _seed_harm_model_knowledge(session, model_id: str, rule_id_prefix: str) -> N
 def _seed_template_items(session, template: AssessmentTemplate, excel_path: str) -> int:
     path = Path(excel_path)
     if not path.exists():
-        return 0
+        return template.item_count or 0
 
     workbook = load_workbook(path, read_only=True, data_only=True)
     sort_order = 0
+    active_ids = set()
+    existing_items = session.query(AssessmentTemplateItem).filter(AssessmentTemplateItem.template_id == template.id).all()
+    existing_by_id = {item.id: item for item in existing_items}
+    existing_by_standard_id = {
+        item.standard_item_id: item
+        for item in existing_items
+        if item.standard_item_id
+    }
+    existing_by_assessment_item_id = {
+        item.assessment_item_id: item
+        for item in existing_items
+        if item.assessment_item_id
+    }
+    existing_by_context = {
+        _assessment_context_key(item.sheet_name, item.category, item.subcategory, item.check_point): item
+        for item in existing_items
+    }
     for sheet in workbook.worksheets:
+        sheet_name = _normalize_assessment_sheet_name(sheet.title)
+        header_row = next(sheet.iter_rows(min_row=1, max_row=1, values_only=True), None)
+        header_map = _assessment_header_map(header_row or ())
         for row in sheet.iter_rows(min_row=2, values_only=True):
-            if not row or not row[0]:
+            if not row or not any(value not in (None, "") for value in row):
+                continue
+            check_point = _assessment_cell(row, header_map, "评估项", 3)
+            if not check_point:
                 continue
             sort_order += 1
-            category = str(row[1] or "").strip()
-            subcategory = str(row[2] or "").strip()
-            standard_item_id = str(row[9] or "").strip()
-            item_id = f"tplitem-{standard_item_id}" if standard_item_id else f"tplitem-{sort_order}"
-            if session.get(AssessmentTemplateItem, item_id):
-                continue
-            session.add(
-                AssessmentTemplateItem(
-                    id=item_id,
-                    template_id=template.id,
-                    sheet_name=sheet.title,
-                    category=category,
-                    subcategory=subcategory,
-                    category_id=_category_id(sheet.title, category, subcategory),
-                    item_code=str(row[0] or sort_order),
-                    check_point=str(row[3] or "").strip(),
-                    standard_item_id=standard_item_id,
-                    sort_order=sort_order,
+            category = _assessment_cell(row, header_map, "评估类别", 1)
+            subcategory = _assessment_cell(row, header_map, "评估子类", 2)
+            assessment_item_id = _assessment_cell(row, header_map, "评估项ID", None)
+            standard_item_id = _assessment_cell(row, header_map, "标准项ID", 9)
+            item_code = _assessment_cell(row, header_map, "整体序号", 0) or str(sort_order)
+            item_id = _assessment_template_item_id(sheet_name, category, subcategory, check_point, standard_item_id, assessment_item_id, sort_order)
+            item = (
+                existing_by_id.get(item_id)
+                or (existing_by_standard_id.get(standard_item_id) if standard_item_id else None)
+                or (existing_by_assessment_item_id.get(assessment_item_id) if assessment_item_id else None)
+                or existing_by_context.get(
+                    _assessment_context_key(sheet_name, category, subcategory, check_point)
                 )
             )
-    return sort_order
+            if not item:
+                item = AssessmentTemplateItem(id=item_id, template_id=template.id)
+                session.add(item)
+                existing_items.append(item)
+                existing_by_id[item.id] = item
+            item.deleted = False
+            item.sheet_name = sheet_name
+            item.category = category
+            item.subcategory = subcategory
+            item.category_id = _category_id(sheet_name, category, subcategory)
+            item.item_code = item_code
+            item.assessment_item_id = assessment_item_id
+            item.check_point = check_point
+            item.standard_item_id = standard_item_id
+            item.sort_order = sort_order
+            if item.standard_item_id:
+                existing_by_standard_id[item.standard_item_id] = item
+            if item.assessment_item_id:
+                existing_by_assessment_item_id[item.assessment_item_id] = item
+            existing_by_context[_assessment_context_key(item.sheet_name, item.category, item.subcategory, item.check_point)] = item
+            active_ids.add(item.id)
+
+    if active_ids:
+        for item in existing_items:
+            if item.id not in active_ids:
+                item.deleted = True
+    return len(active_ids) or template.item_count or 0
+
+
+def _assessment_header_map(header_row: tuple) -> dict[str, int]:
+    return {str(value or "").strip(): index for index, value in enumerate(header_row) if str(value or "").strip()}
+
+
+def _assessment_cell(row: tuple, header_map: dict[str, int], header: str, fallback_index: int | None) -> str:
+    index = header_map.get(header)
+    if index is None:
+        index = fallback_index
+    if index is None or index >= len(row):
+        return ""
+    return _cell_to_text(row[index])
+
+
+def _cell_to_text(value) -> str:
+    if value in (None, ""):
+        return ""
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return str(value).strip()
+
+
+def _normalize_assessment_sheet_name(sheet_name: str) -> str:
+    return re.sub(r"\d+(?:[-+]\d+)*$", "", str(sheet_name or "")).strip() or str(sheet_name or "").strip()
+
+
+def _assessment_template_item_id(
+    sheet_name: str,
+    category: str,
+    subcategory: str,
+    check_point: str,
+    standard_item_id: str,
+    assessment_item_id: str,
+    sort_order: int,
+) -> str:
+    if standard_item_id:
+        return f"tplitem-{standard_item_id}"
+    if assessment_item_id:
+        return f"tplitem-{assessment_item_id.lower()}"
+    digest = hashlib.sha1("|".join([sheet_name, category, subcategory, check_point]).encode("utf-8")).hexdigest()
+    return f"tplitem-{sort_order}-{digest[:10]}"
+
+
+def _assessment_context_key(sheet_name: str | None, category: str | None, subcategory: str | None, check_point: str | None) -> tuple[str, str, str, str]:
+    return (
+        _normalize_assessment_key(sheet_name),
+        _normalize_assessment_key(category),
+        _normalize_assessment_key(subcategory),
+        _normalize_assessment_key(check_point),
+    )
+
+
+def _normalize_assessment_key(value: str | None) -> str:
+    return " ".join(str(value or "").split())
+
+
+def _find_existing_template_item(
+    session,
+    template_id: str,
+    sheet_name: str,
+    category: str,
+    subcategory: str,
+    check_point: str,
+    standard_item_id: str,
+    assessment_item_id: str,
+) -> AssessmentTemplateItem | None:
+    query = session.query(AssessmentTemplateItem).filter(AssessmentTemplateItem.template_id == template_id)
+    if standard_item_id:
+        item = query.filter(AssessmentTemplateItem.standard_item_id == standard_item_id).first()
+        if item:
+            return item
+    if assessment_item_id:
+        item = query.filter(AssessmentTemplateItem.assessment_item_id == assessment_item_id).first()
+        if item:
+            return item
+    return query.filter(
+        AssessmentTemplateItem.sheet_name == sheet_name,
+        AssessmentTemplateItem.category == category,
+        AssessmentTemplateItem.subcategory == subcategory,
+        AssessmentTemplateItem.check_point == check_point,
+    ).first()
+
+
+def _backfill_existing_assessment_item_ids(session) -> None:
+    session.flush()
+    session.execute(
+        text(
+            """
+            UPDATE project_assessment_item
+            SET assessment_item_id = (
+                SELECT assessment_template_item.assessment_item_id
+                FROM assessment_template_item
+                WHERE assessment_template_item.id = project_assessment_item.template_item_id
+            )
+            WHERE deleted = false
+              AND template_item_id IS NOT NULL
+              AND (
+                assessment_item_id IS NULL
+                OR assessment_item_id = ''
+                OR assessment_item_id <> (
+                    SELECT assessment_template_item.assessment_item_id
+                    FROM assessment_template_item
+                    WHERE assessment_template_item.id = project_assessment_item.template_item_id
+                )
+              )
+              AND (
+                SELECT assessment_template_item.assessment_item_id
+                FROM assessment_template_item
+                WHERE assessment_template_item.id = project_assessment_item.template_item_id
+              ) IS NOT NULL
+              AND (
+                SELECT assessment_template_item.assessment_item_id
+                FROM assessment_template_item
+                WHERE assessment_template_item.id = project_assessment_item.template_item_id
+              ) <> ''
+            """
+        )
+    )
+    session.execute(
+        text(
+            """
+            UPDATE project_risk_summary_record
+            SET assessment_item_id = (
+                SELECT project_assessment_item.assessment_item_id
+                FROM project_assessment_item
+                WHERE project_assessment_item.id = project_risk_summary_record.evaluation_item_id
+            )
+            WHERE deleted = false
+              AND evaluation_item_id IS NOT NULL
+              AND (
+                assessment_item_id IS NULL
+                OR assessment_item_id = ''
+                OR assessment_item_id <> (
+                    SELECT project_assessment_item.assessment_item_id
+                    FROM project_assessment_item
+                    WHERE project_assessment_item.id = project_risk_summary_record.evaluation_item_id
+                )
+              )
+              AND (
+                SELECT project_assessment_item.assessment_item_id
+                FROM project_assessment_item
+                WHERE project_assessment_item.id = project_risk_summary_record.evaluation_item_id
+              ) IS NOT NULL
+              AND (
+                SELECT project_assessment_item.assessment_item_id
+                FROM project_assessment_item
+                WHERE project_assessment_item.id = project_risk_summary_record.evaluation_item_id
+              ) <> ''
+            """
+        )
+    )
+
+
+def _backfill_existing_risk_template_fields(session) -> None:
+    templates = (
+        session.query(RiskSourceTemplate)
+        .filter(RiskSourceTemplate.deleted.is_(False))
+        .order_by(RiskSourceTemplate.sort_order.asc())
+        .all()
+    )
+    templates_by_key = {}
+    for template in templates:
+        key = _risk_template_key(template.sheet_name, template.category, template.subcategory, template.assessment_item)
+        if key[3] and key not in templates_by_key:
+            templates_by_key[key] = template
+
+    rows = (
+        session.query(ProjectRiskSummaryRecord, ProjectAssessmentItem)
+        .join(ProjectAssessmentItem, ProjectAssessmentItem.id == ProjectRiskSummaryRecord.evaluation_item_id)
+        .filter(ProjectRiskSummaryRecord.deleted.is_(False), ProjectAssessmentItem.deleted.is_(False))
+        .all()
+    )
+    for record, item in rows:
+        key = _risk_template_key(
+            item.sheet_name,
+            record.assessment_category or item.category,
+            record.assessment_subcategory or item.subcategory,
+            record.check_point or item.check_point,
+        )
+        template = templates_by_key.get(key)
+        if not template:
+            continue
+        record.risk_source_type = template.risk_source_type
 
 
 def _seed_risk_source_templates(session, excel_path: str) -> int:
@@ -453,6 +687,19 @@ def _get_risk_source_template(
 def _risk_source_template_id(sheet_name: str, category: str, subcategory: str, assessment_item: str) -> str:
     digest = hashlib.sha1("|".join([sheet_name, category, subcategory, assessment_item]).encode("utf-8")).hexdigest()
     return f"rstpl-{digest[:16]}"
+
+
+def _risk_template_key(sheet_name: str | None, category: str | None, subcategory: str | None, assessment_item: str | None) -> tuple[str, str, str, str]:
+    return (
+        _normalize_risk_template_key(sheet_name),
+        _normalize_risk_template_key(category),
+        _normalize_risk_template_key(subcategory),
+        _normalize_risk_template_key(assessment_item),
+    )
+
+
+def _normalize_risk_template_key(value: str | None) -> str:
+    return " ".join(str(value or "").split())
 
 
 def _split_risk_types(value: str) -> list[str]:

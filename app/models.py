@@ -34,7 +34,7 @@ class Project(ModelMixin, Base):
     __tablename__ = "project"
 
     id = Column(String(64), primary_key=True, default=lambda: new_id("p"))
-    project_code = Column(String(100), unique=True, nullable=False, index=True)
+    project_code = Column(String(100), nullable=False, index=True)
     project_name = Column(String(200), nullable=False)
     assessment_org = Column(String(200), nullable=False)
     status = Column(String(40), default="NOT_STARTED", nullable=False, index=True)
@@ -44,6 +44,7 @@ class Project(ModelMixin, Base):
     harm_model_id = Column(String(64))
     score_model_id = Column(String(64))
     description = Column(Text)
+    risk_merge_enabled = Column(Boolean, default=False, nullable=False)
 
 
 class AssessmentTemplate(ModelMixin, Base):
@@ -67,6 +68,7 @@ class AssessmentTemplateItem(ModelMixin, Base):
     subcategory = Column(String(200))
     category_id = Column(String(500), index=True)
     item_code = Column(String(100))
+    assessment_item_id = Column(String(100), index=True)
     check_point = Column(Text)
     standard_item_id = Column(String(100))
     sort_order = Column(Integer, default=0)
@@ -167,6 +169,7 @@ class ProjectAssessmentItem(ModelMixin, Base):
     project_id = Column(String(64), ForeignKey("project.id"), nullable=False, index=True)
     template_item_id = Column(String(64), ForeignKey("assessment_template_item.id"), nullable=False)
     item_code = Column(String(100))
+    assessment_item_id = Column(String(100), index=True)
     sheet_name = Column(String(100))
     category = Column(String(200))
     subcategory = Column(String(200))
@@ -497,6 +500,7 @@ class ProjectRiskSummaryRecord(ModelMixin, Base):
     project_id = Column(String(64), ForeignKey("project.id"), nullable=False, index=True)
     evaluation_item_id = Column(String(64), ForeignKey("project_assessment_item.id"), nullable=False, index=True)
     source_item_code = Column(String(100))
+    assessment_item_id = Column(String(100), index=True)
     assessment_category = Column(String(200))
     assessment_subcategory = Column(String(200))
     check_point = Column(Text)
@@ -505,6 +509,7 @@ class ProjectRiskSummaryRecord(ModelMixin, Base):
     risk_types = Column(JSON)
     risk_description = Column(Text)
     risk_source_description = Column(Text)
+    risk_source_type = Column(Text)
     related_data = Column(Text)
     related_activities = Column(JSON)
     harm_level = Column(String(40))

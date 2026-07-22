@@ -24,6 +24,37 @@ def refresh(project_id: str):
     return success(risk_service.refresh(project_id, payload))
 
 
+@bp.get("/projects/<project_id>/risk-summary/merge")
+def get_risk_merge_state(project_id: str):
+    """查询风险清单合并开关状态。"""
+    logger.info("收到查询风险清单合并开关请求。project_id=%s", project_id)
+    return success(risk_service.get_risk_merge_state(project_id))
+
+
+@bp.put("/projects/<project_id>/risk-summary/merge")
+def update_risk_merge_state(project_id: str):
+    """设置风险源清单合并开关，开启时校验必填字段。"""
+    payload = request_json()
+    logger.info("收到设置风险清单合并开关请求。project_id=%s payload_keys=%s", project_id, sorted(payload.keys()))
+    return success(risk_service.update_risk_merge_state(project_id, payload))
+
+
+@bp.post("/projects/<project_id>/risk-summary/merge/update")
+def update_risk_merge_data(project_id: str):
+    """重新计算当前合并结果，并返回更新合并按钮提示信息。"""
+    logger.info("收到更新合并数据请求。project_id=%s", project_id)
+    result = risk_service.update_risk_merge_data(project_id)
+    message = result.pop("_message")
+    return success(result, message=message)
+
+
+@bp.get("/projects/<project_id>/risk-form-options")
+def get_risk_form_options(project_id: str):
+    """查询风险源清单和风险清单编辑下拉选项。"""
+    logger.info("收到查询风险清单下拉选项请求。project_id=%s", project_id)
+    return success(risk_service.get_risk_form_options(project_id))
+
+
 @bp.get("/projects/<project_id>/risk-sources")
 def list_risk_sources(project_id: str):
     """查询汇总分析中的风险源清单。"""

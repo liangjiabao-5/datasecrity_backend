@@ -16,17 +16,21 @@ from app.services.risk_service import DEFAULT_HARM_LEVEL, DEFAULT_POSSIBILITY_LE
 
 SOURCE_COLUMNS = [
     ("index", "序号"),
-    ("risk_types", "风险类型"),
+    ("assessment_item_id", "评估项ID"),
+    ("assessment_subcategory", "评估子类"),
     ("check_point", "检查要点"),
     ("evaluation_record", "评估结果"),
     ("risk_description", "风险描述"),
     ("risk_source_description", "风险源描述"),
+    ("risk_source_type", "风险源类型"),
+    ("risk_types", "风险类型"),
     ("related_data", "涉及的数据及类型、级别"),
     ("related_activities", "涉及的数据处理活动"),
 ]
 
 ITEM_COLUMNS = [
     ("index", "序号"),
+    ("assessment_item_id", "评估项ID"),
     ("risk_types", "风险类型"),
     ("risk_description", "风险描述"),
     ("harm_level", "危害程度"),
@@ -39,6 +43,10 @@ ITEM_COLUMNS = [
 
 SOURCE_HEADER_ALIASES = {
     "序号": "index",
+    "评估项ID": "assessment_item_id",
+    "assessmentItemId": "assessment_item_id",
+    "评估子类": "assessment_subcategory",
+    "assessmentSubcategory": "assessment_subcategory",
     "风险类型": "risk_types",
     "riskTypes": "risk_types",
     "检查要点": "check_point",
@@ -49,6 +57,8 @@ SOURCE_HEADER_ALIASES = {
     "riskDescription": "risk_description",
     "风险源描述": "risk_source_description",
     "riskSourceDescription": "risk_source_description",
+    "风险源类型": "risk_source_type",
+    "riskSourceType": "risk_source_type",
     "涉及的数据及类型、级别": "related_data",
     "relatedData": "related_data",
     "涉及的数据处理活动": "related_activities",
@@ -59,6 +69,8 @@ SOURCE_HEADER_ALIASES = {
 
 ITEM_HEADER_ALIASES = {
     "序号": "index",
+    "评估项ID": "assessment_item_id",
+    "assessmentItemId": "assessment_item_id",
     "风险类型": "risk_types",
     "riskTypes": "risk_types",
     "风险描述": "risk_description",
@@ -89,7 +101,12 @@ ITEM_EDITABLE_FIELDS = [
     "related_data",
     "related_activities",
 ]
-SOURCE_READONLY_FIELDS = [("check_point", "检查要点"), ("evaluation_record", "评估结果")]
+SOURCE_READONLY_FIELDS = [
+    ("assessment_item_id", "评估项ID"),
+    ("assessment_subcategory", "评估子类"),
+    ("check_point", "检查要点"),
+    ("evaluation_record", "评估结果"),
+]
 
 MULTI_VALUE_PATTERN = re.compile(r"[、,，;；\r\n]+")
 EMPTY_LEVEL_TEXTS = {"", "-", "待评估", "TO_BE_EVALUATED", "PENDING"}
